@@ -9,15 +9,25 @@
 <meta name="theme-color" content="#0f0f0f" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f5f5f0" media="(prefers-color-scheme: light)">
 <title>Spendly — Expense Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="manifest" id="pwaManifest">
 <script>
-// Supabase loader — dynamically inject so we can wait for it reliably
-(function() {
+// ─────────────────────────────────────────────────────────────────────────────
+// SPENDLY MODE — change this ONE line when deploying to friends repo
+// ⚠️  'cloud' = Supabase auth + sync (your personal version)
+// ⚠️  'local' = localStorage only, no accounts (friends version)
+// ─────────────────────────────────────────────────────────────────────────────
+const SPENDLY_MODE = 'cloud';
+
+// Only load Supabase SDK in cloud mode
+if (SPENDLY_MODE === 'cloud') {
   const s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
   s.id = 'sbScript';
   document.head.appendChild(s);
-})();
+}
 </script>
 <script>
 const manifestData = { name:"Spendly — Expense Tracker", short_name:"Spendly", start_url:"./", display:"standalone", background_color:"#0f0f0f", theme_color:"#0f0f0f", orientation:"any" };
@@ -26,7 +36,7 @@ document.getElementById('pwaManifest').href = URL.createObjectURL(mblob);
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  const APP_VER = '1.4.1-202603211229';
+  const APP_VER = '1.7.6-202603221639';
   const swCode = `
 const CACHE = 'spendly-${APP_VER}';
 const VERSION = '${APP_VER}';
@@ -124,10 +134,15 @@ async function applyUpdate() {
     --border: #333; --text: #f0f0f0; --muted: #888; --accent: #4F8EF7;
     --accent-dim: rgba(79,142,247,0.12); --red: #ff5c5c; --red-dim: rgba(255,92,92,0.12);
     --orange: #f0a860; --r: 12px;
-    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; overflow-x: hidden; overscroll-behavior-y: none; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; overflow-x: hidden; overscroll-behavior-y: none; -webkit-font-smoothing: antialiased; font-feature-settings: 'cv05' 1; }
+  /* Tabular figures for all currency/number displays */
+  .big-num, .num-label, .item-amount, .goal-num, .goals-subtotal span,
+  [class*="font-size:2"], [class*="font-size:3"], [class*="font-size:1"] {
+    font-variant-numeric: tabular-nums;
+  }
   #app { max-width: 900px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; visibility: hidden; }
 
   /* Header */
@@ -138,7 +153,7 @@ async function applyUpdate() {
   .icon-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(--muted); line-height: 1; display: flex; align-items: center; border-radius: 6px; }
   .icon-btn:active { background: var(--surface2); }
   .totals-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px; }
-  .big-num { font-size: 38px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; }
+  .big-num { font-size: 38px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; font-variant-numeric: tabular-nums; }
   .num-label { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
   .sub-text { font-size: 13px; color: var(--muted); }
 
@@ -177,11 +192,11 @@ async function applyUpdate() {
   .section-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin: 16px 0 8px; }
   .list-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border-radius: var(--r); margin-bottom: 8px; cursor: pointer; transition: background 0.1s; }
   .list-item:active { background: var(--surface2); }
-  .cat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .cat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .item-info { flex: 1; min-width: 0; }
   .item-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .item-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .item-amount { font-size: 15px; font-weight: 600; }
+  .item-amount { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
   /* Empty */
   .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
@@ -208,7 +223,7 @@ async function applyUpdate() {
   .goal-row:last-of-type { border-bottom: none; }
   .goal-row:active { background: var(--surface2); }
   .goal-cat { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .goal-num { font-size: 13px; text-align: right; }
+  .goal-num { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
   .goals-subtotal { display: grid; grid-template-columns: 1fr 80px 80px 80px; padding: 8px 14px; background: var(--surface2); border-top: 1px solid var(--border); }
   .goals-subtotal span { font-size: 12px; font-weight: 600; }
   .goals-subtotal span:not(:first-child) { text-align: right; }
@@ -216,10 +231,13 @@ async function applyUpdate() {
   /* Modal */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 600px; margin: 0 auto; padding: 22px 20px 44px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); max-height: 90vh; overflow-y: auto; }
+  .modal { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 600px; margin: 0 auto; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
   .modal-overlay.open .modal { transform: translateY(0); }
-  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 100px; margin: 0 auto 18px; padding: 10px 40px; background-clip: content-box; cursor: grab; }
-  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+  .modal-handle-bar { padding: 14px 20px 0; flex-shrink: 0; cursor: grab; touch-action: none; background: var(--surface); border-radius: 24px 24px 0 0; }
+  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 100px; margin: 0 auto 14px; }
+  .modal-header { padding: 0 20px 4px; flex-shrink: 0; background: var(--surface); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .modal-body { padding: 4px 20px 44px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
   label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
   input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 16px; font-family: var(--font); padding: 11px 13px; outline: none; margin-bottom: 14px; -webkit-appearance: none; }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); }
@@ -253,7 +271,34 @@ async function applyUpdate() {
   .auth-error { font-size:13px;color:var(--red);text-align:center;min-height:18px;margin-bottom:8px;line-height:1.4; }
   .auth-hint { font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin-top:4px; }
 
-  /* Analytics */
+  /* Tab customise */
+  .tab-config-item { display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--surface); border-radius:var(--r); margin-bottom:6px; cursor:grab; touch-action:none; user-select:none; }
+  .tab-config-item.dragging { opacity:0.4; cursor:grabbing; }
+  .tab-config-item.drag-over { border:2px dashed var(--accent); }
+  .tab-config-drag { color:var(--muted); font-size:16px; flex-shrink:0; }
+  .tab-config-toggle { width:44px; height:26px; border-radius:100px; border:none; cursor:pointer; position:relative; flex-shrink:0; transition:background 0.2s; }
+  .tab-config-toggle.on { background:var(--accent); }
+  .tab-config-toggle.off { background:var(--surface3); }
+  .tab-config-toggle::after { content:''; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff; top:3px; transition:left 0.2s; }
+  .tab-config-toggle.on::after { left:21px; }
+  .tab-config-toggle.off::after { left:3px; }
+  .tab-config-locked { font-size:11px; color:var(--muted); flex-shrink:0; }
+
+  /* Settings */
+  .settings-section-label { font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;padding:20px 4px 8px; }
+  .settings-group { background:var(--surface);border-radius:16px;overflow:hidden;margin-bottom:4px; }
+  .settings-row { display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background 0.1s;-webkit-tap-highlight-color:transparent; }
+  .settings-row:not(:last-child) { border-bottom:1px solid var(--surface2); }
+  .settings-row:active { background:var(--surface2); }
+  .settings-row-icon { width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15)); }
+  .settings-row-label { flex:1;font-size:15px;font-weight:500;color:var(--text); }
+  .settings-row-sub { font-size:12px;color:var(--muted);flex-shrink:0;margin-right:4px; }
+  .settings-row-chevron { font-size:18px;color:var(--border);flex-shrink:0;line-height:1;font-weight:300; }
+  .settings-row-value { font-size:13px;color:var(--muted);flex-shrink:0;margin-right:2px; }
+
+  .wb-cycle-type-btn { background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:12px 8px;font-size:13px;font-family:var(--font);color:var(--muted);cursor:pointer;text-align:center;line-height:1.5;transition:all 0.15s; }
+  .wb-cycle-type-btn.active { border-color:var(--accent);background:var(--accent-dim);color:var(--accent);font-weight:600; }
+  .wb-cycle-type-btn span { display:block;font-size:12px;margin-top:2px; }
   .chart-container { position: relative; width: 100%; height: 180px; margin-bottom: 16px; }
   .donut-wrap { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
   .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; margin-bottom: 7px; }
@@ -335,9 +380,10 @@ async function applyUpdate() {
   .lock-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
   .lock-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; text-align: center; line-height: 1.5; }
   .pin-dots { display: flex; gap: 14px; margin-bottom: 32px; }
-  .pin-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--surface3); transition: background 0.15s, transform 0.15s; }
-  .pin-dot.filled { background: var(--accent); transform: scale(1.15); }
-  .pin-dot.error { background: var(--red); }
+  .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--surface3); transition: background 0.1s, transform 0.15s; }
+  .pin-dot.filled { background: var(--accent); transform: scale(1.3); animation: dotPop 0.2s ease; }
+  .pin-dot.error { background: var(--red); transform: scale(1.3); }
+  @keyframes dotPop { 0% { transform: scale(1); } 60% { transform: scale(1.5); } 100% { transform: scale(1.3); } }
   .numpad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
   .numpad-btn {
     width: 72px; height: 72px; border-radius: 50%;
@@ -345,12 +391,14 @@ async function applyUpdate() {
     font-size: 22px; font-weight: 600; font-family: var(--font);
     color: var(--text); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: background 0.1s, transform 0.08s;
+    transition: background 0.08s, transform 0.08s;
     -webkit-tap-highlight-color: transparent;
   }
-  .numpad-btn:active { background: var(--surface3); transform: scale(0.93); }
-  .numpad-btn.action { font-size: 14px; color: var(--muted); background: none; }
+  .numpad-btn:active { background: var(--surface3); transform: scale(0.91); }
+  .numpad-btn.pressed { background: var(--surface3) !important; transform: scale(0.91) !important; }
+  .numpad-btn.action { font-size: 22px; color: var(--muted); background: none; }
   .numpad-btn.action:active { background: var(--surface2); }
+  .numpad-btn.action.pressed { background: var(--surface2) !important; }
   .lock-biometric-btn {
     margin-top: 20px; background: none; border: none;
     color: var(--accent); font-size: 14px; font-family: var(--font);
@@ -433,6 +481,10 @@ async function applyUpdate() {
     0%,100% { transform: translate(0,0); }
     50% { transform: translate(-15px,15px); }
   }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
   #launchScreen { -webkit-transform: translateZ(0); }
 
   .spendly-tip { position:relative; display:inline-flex; align-items:center; }
@@ -452,7 +504,7 @@ async function applyUpdate() {
     <div class="wb-features" id="wbFeatures">
       <div class="wb-feature">
         <div class="wb-feature-icon">💳</div>
-        <div><div class="wb-feature-title">Synced to your billing cycle</div><div class="wb-feature-text">Tracks spending from the day your credit card statement starts — not just a calendar month</div></div>
+        <div><div class="wb-feature-title">Synced to your spending cycle</div><div class="wb-feature-text">Tracks spending within your own cycle — weekly, fortnightly, or monthly — not just a calendar month</div></div>
       </div>
       <div class="wb-feature">
         <div class="wb-feature-icon">🎯</div>
@@ -495,18 +547,37 @@ async function applyUpdate() {
       <div class="wb-dot" id="wbDotBar5b"></div>
     </div>
   </div>
-  <!-- Page 3: CC cycle -->
+  <!-- Page 3: Cycle setup -->
   <div id="wbPage3" style="display:none;flex-direction:column;align-items:center;width:100%">
-    <div style="font-size:48px;margin-bottom:12px">💳</div>
-    <div class="wb-title show">Your billing cycle</div>
-    <div class="wb-desc show" style="margin-bottom:8px">Spendly tracks spending within your credit card billing cycle — not a calendar month.</div>
-    <div class="wb-desc show" style="margin-bottom:20px;font-size:13px">Example: if your statement closes on the 17th, your new cycle starts on the <strong style="color:var(--text)">18th</strong> — enter 18.</div>
+    <div style="font-size:48px;margin-bottom:12px">📅</div>
+    <div class="wb-title show">Your spending cycle</div>
+    <div class="wb-desc show" style="margin-bottom:20px">How often does your budget reset? Choose a cycle that matches how you get paid or manage your money.</div>
     <div class="wb-name-section show" style="width:100%;max-width:320px">
-      <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block">Monthly budget ($)</label>
+      <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block">Budget amount ($)</label>
       <input class="wb-name-input" id="wbBudget" type="number" inputmode="decimal" placeholder="e.g. 3000" oninput="wbCheckCycle()" style="text-align:left;font-size:16px;padding:14px 16px">
-      <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block;margin-top:2px">New cycle starts on day</label>
-      <input class="wb-name-input" id="wbCycleDay" type="number" inputmode="numeric" placeholder="e.g. 18" min="1" max="28" oninput="wbCheckCycle()" style="text-align:left;font-size:16px;padding:14px 16px">
-      <div id="wbCyclePreview" style="font-size:12px;color:var(--muted);margin-bottom:16px;min-height:16px;text-align:center"></div>
+      <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px;display:block">Cycle type</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+        <button id="wbCycleTypeMonthly" onclick="wbSetCycleType('monthly')" class="wb-cycle-type-btn active">📅<br><span>Monthly</span></button>
+        <button id="wbCycleTypeFortnightly" onclick="wbSetCycleType('fortnightly')" class="wb-cycle-type-btn">🗓️<br><span>Fortnightly</span></button>
+        <button id="wbCycleTypeWeekly" onclick="wbSetCycleType('weekly')" class="wb-cycle-type-btn">📆<br><span>Weekly</span></button>
+      </div>
+      <!-- Monthly: day of month -->
+      <div id="wbMonthlyCycleFields">
+        <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block">Cycle starts on day</label>
+        <input class="wb-name-input" id="wbCycleDay" type="number" inputmode="numeric" placeholder="e.g. 18" min="1" max="28" oninput="wbCheckCycle()" style="text-align:left;font-size:16px;padding:14px 16px">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.5">
+          Enter the day your new cycle starts each month. For example, if it resets on the 18th, enter <strong style="color:var(--text)">18</strong>.
+        </div>
+      </div>
+      <!-- Weekly / Fortnightly: anchor date -->
+      <div id="wbAnchorCycleFields" style="display:none">
+        <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block">Most recent cycle start date</label>
+        <input class="wb-name-input" id="wbCycleAnchor" type="date" oninput="wbCheckCycle()" style="text-align:left;font-size:16px;padding:14px 16px">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.5">
+          Enter the date your most recent cycle started — Spendly will calculate all future cycles from there.
+        </div>
+      </div>
+      <div id="wbCyclePreview" style="font-size:12px;color:var(--accent);margin-bottom:16px;min-height:16px;text-align:center;font-weight:600"></div>
       <button class="wb-btn" id="wbCycleBtn" onclick="wbSubmitCycle()" disabled>Continue →</button>
     </div>
     <div class="wb-dots" style="margin-top:24px">
@@ -523,7 +594,7 @@ async function applyUpdate() {
     <div style="font-size:48px;margin-bottom:12px">💰</div>
     <div class="wb-title show">What are you saving for?</div>
     <div class="wb-desc show" style="margin-bottom:8px">Add things you're working towards — a holiday, a new car, an emergency fund.</div>
-    <div class="wb-desc show" style="margin-bottom:20px;font-size:12px">At end of each billing cycle, if you've spent less than your budget, Spendly will suggest how to split your savings across these goals. You can always add more later.</div>
+    <div class="wb-desc show" style="margin-bottom:20px;font-size:12px">At the end of each cycle, if you've spent less than your budget, Spendly will suggest how to split your savings across these goals. You can always add more later.</div>
     <div style="width:100%;max-width:320px">
       <div id="wbGoalsList" style="margin-bottom:12px"></div>
       <div style="display:flex;gap:8px;margin-bottom:6px">
@@ -596,33 +667,52 @@ async function applyUpdate() {
   <div class="lock-icon" id="lockIcon">🔒</div>
   <div class="lock-title" id="lockTitle">Spendly</div>
   <div class="lock-sub" id="lockSub">Enter your PIN to continue</div>
-  <div class="pin-dots" id="pinDots">
-    <div class="pin-dot" id="dot0"></div>
-    <div class="pin-dot" id="dot1"></div>
-    <div class="pin-dot" id="dot2"></div>
-    <div class="pin-dot" id="dot3"></div>
-  </div>
-  <div class="lock-error-msg" id="lockError"></div>
-  <div class="numpad">
-    <button class="numpad-btn" onclick="lockTap('1')">1</button>
-    <button class="numpad-btn" onclick="lockTap('2')">2</button>
-    <button class="numpad-btn" onclick="lockTap('3')">3</button>
-    <button class="numpad-btn" onclick="lockTap('4')">4</button>
-    <button class="numpad-btn" onclick="lockTap('5')">5</button>
-    <button class="numpad-btn" onclick="lockTap('6')">6</button>
-    <button class="numpad-btn" onclick="lockTap('7')">7</button>
-    <button class="numpad-btn" onclick="lockTap('8')">8</button>
-    <button class="numpad-btn" onclick="lockTap('9')">9</button>
-    <button class="numpad-btn action" id="lockBiomSmall" onclick="triggerBiometric()" style="display:none">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M7 9c0-2.2 1.8-4 4-4s4 1.8 4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="4" y="11" width="14" height="8" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="15" r="1.5" fill="currentColor"/></svg>
+  <!-- Face ID prompt (shown instead of PIN when biometric is available) -->
+  <div id="faceIdPrompt" style="display:none;flex-direction:column;align-items:center;gap:16px;margin:8px 0 24px">
+    <button id="faceIdBtn" onclick="triggerBiometric()" style="background:var(--accent-dim);border:1.5px solid var(--accent);border-radius:20px;padding:18px 32px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:opacity 0.15s">
+      <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <path d="M6 14V10a4 4 0 0 1 4-4h4" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M38 14V10a4 4 0 0 0-4-4h-4" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M6 30v4a4 4 0 0 0 4 4h4" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M38 30v4a4 4 0 0 1-4 4h-4" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="16" cy="19" r="2" fill="var(--accent)"/>
+        <circle cx="28" cy="19" r="2" fill="var(--accent)"/>
+        <path d="M15 28c1.5 3 12.5 3 14 0" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+        <path d="M22 19v5" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span style="font-size:15px;font-weight:700;color:var(--accent);font-family:var(--font)">Use Face ID</span>
     </button>
-    <button class="numpad-btn" onclick="lockTap('0')">0</button>
-    <button class="numpad-btn action" onclick="lockBackspace()">⌫</button>
+    <button onclick="showPinFallback()" style="background:none;border:none;color:var(--muted);font-size:13px;font-family:var(--font);cursor:pointer;padding:4px 8px">Use PIN instead</button>
   </div>
-  <button class="lock-biometric-btn" id="lockBiomBtn" onclick="triggerBiometric()" style="display:none">
-    <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M7 9c0-2.2 1.8-4 4-4s4 1.8 4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="4" y="11" width="14" height="8" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="15" r="1.5" fill="currentColor"/></svg>
-    Use Face ID / Fingerprint
-  </button>
+  <div id="pinPad" style="display:flex;flex-direction:column;align-items:center">
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="lock-error-msg" id="lockError"></div>
+    <div class="numpad">
+      <button class="numpad-btn" ontouchstart="lockTap('1',this)" onclick="lockTap('1',this)">1</button>
+      <button class="numpad-btn" ontouchstart="lockTap('2',this)" onclick="lockTap('2',this)">2</button>
+      <button class="numpad-btn" ontouchstart="lockTap('3',this)" onclick="lockTap('3',this)">3</button>
+      <button class="numpad-btn" ontouchstart="lockTap('4',this)" onclick="lockTap('4',this)">4</button>
+      <button class="numpad-btn" ontouchstart="lockTap('5',this)" onclick="lockTap('5',this)">5</button>
+      <button class="numpad-btn" ontouchstart="lockTap('6',this)" onclick="lockTap('6',this)">6</button>
+      <button class="numpad-btn" ontouchstart="lockTap('7',this)" onclick="lockTap('7',this)">7</button>
+      <button class="numpad-btn" ontouchstart="lockTap('8',this)" onclick="lockTap('8',this)">8</button>
+      <button class="numpad-btn" ontouchstart="lockTap('9',this)" onclick="lockTap('9',this)">9</button>
+      <button class="numpad-btn action" id="lockBiomSmall" onclick="triggerBiometric()" style="display:none">
+        <svg width="22" height="22" viewBox="0 0 44 44" fill="none"><path d="M6 14V10a4 4 0 0 1 4-4h4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M38 14V10a4 4 0 0 0-4-4h-4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M6 30v4a4 4 0 0 0 4 4h4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M38 30v4a4 4 0 0 1-4 4h-4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="19" r="2.5" fill="currentColor"/><circle cx="28" cy="19" r="2.5" fill="currentColor"/><path d="M15 28c1.5 3 12.5 3 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
+      <button class="numpad-btn" ontouchstart="lockTap('0',this)" onclick="lockTap('0',this)">0</button>
+      <button class="numpad-btn action" ontouchstart="lockBackspace(this)" onclick="lockBackspace(this)">⌫</button>
+    </div>
+    <button class="lock-biometric-btn" id="lockBiomBtn" onclick="triggerBiometric()" style="display:none">
+      <svg width="18" height="18" viewBox="0 0 44 44" fill="none"><path d="M6 14V10a4 4 0 0 1 4-4h4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M38 14V10a4 4 0 0 0-4-4h-4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M6 30v4a4 4 0 0 0 4 4h4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M38 30v4a4 4 0 0 1-4 4h-4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="19" r="2.5" fill="currentColor"/><circle cx="28" cy="19" r="2.5" fill="currentColor"/><path d="M15 28c1.5 3 12.5 3 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      Use Face ID / Fingerprint
+    </button>
+  </div>
   <div class="lock-setup-hint" id="lockHint" style="display:none">Enter a 4-digit PIN to set one up.</div>
 </div>
 <div id="dataLossBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:998;background:#ff5c5c;color:#fff;padding:12px 16px;flex-direction:column;gap:6px;box-shadow:0 2px 12px rgba(0,0,0,0.3)">
@@ -705,6 +795,7 @@ async function applyUpdate() {
     <input class="auth-input" type="password" id="authPasswordConfirm" placeholder="Confirm password" autocomplete="new-password" style="display:none">
     <div class="auth-error" id="authError"></div>
     <button class="auth-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign in</button>
+    <button id="authForgotBtn" onclick="handleForgotPassword()" style="background:none;border:none;color:var(--accent);font-size:13px;font-family:var(--font);cursor:pointer;padding:8px;margin-top:-4px;opacity:0.85">Forgot password?</button>
     <div class="auth-hint" id="authHint">Your data is private and encrypted.<br>Only you can access it.</div>
   </div>
 </div>
@@ -751,19 +842,11 @@ async function applyUpdate() {
 
   <div id="cycleStats"></div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('expenses')"><span class="tab-icon">💸</span>Expenses</button>
-    <button class="tab" onclick="switchTab('goals')"><span class="tab-icon">🎯</span>Budget</button>
-    <button class="tab" onclick="switchTab('savings')"><span class="tab-icon">💰</span>Savings</button>
-    <button class="tab" onclick="switchTab('recycling')"><span class="tab-icon">♻️</span>Recycling</button>
-    <button class="tab" onclick="switchTab('mortgage')"><span class="tab-icon">🏠</span>Mortgage</button>
-    <button class="tab" onclick="switchTab('tax')"><span class="tab-icon">🧾</span>Tax</button>
-    <button class="tab" onclick="switchTab('giftcards')"><span class="tab-icon">🎁</span>Wallet</button>
-    <button class="tab" onclick="switchTab('portfolio')"><span class="tab-icon">📈</span>Portfolio</button>
-    <button class="tab" onclick="switchTab('networth')"><span class="tab-icon">💎</span>Net Worth</button>
-    <button class="tab" onclick="switchTab('investor')"><span class="tab-icon">💡</span>Investor</button>
-    <button class="tab" onclick="switchTab('analytics')"><span class="tab-icon">📊</span>Analytics</button>
-    <button class="tab" onclick="switchTab('notes')"><span class="tab-icon">📝</span>Notes</button>
+  <div id="tabsContainer">
+    <!-- Rendered dynamically by renderTabs() -->
+  </div>
+  <div id="tabsHint" style="text-align:center;font-size:11px;color:var(--muted);padding:0 16px 6px;display:none">
+    More tabs available in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:11px;font-family:var(--font);cursor:pointer;padding:0">Settings ⚙️</button>
   </div>
 
   <div class="content" id="content"></div>
@@ -774,40 +857,159 @@ async function applyUpdate() {
   </button>
 </div>
 
+<!-- Tab customise modal -->
+<div class="modal-overlay" id="tabCustomiseModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Customise tabs</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Use ▲▼ to reorder · tap toggle to show/hide. Expenses is always first.</div>
+    <div id="tabCustomiseList"></div>
+    <button class="btn-primary" onclick="saveTabConfig()">Save</button>
+    <button class="btn-ghost" onclick="closeModal('tabCustomiseModal')">Cancel</button>
+  </div>
+</div>
+
 <!-- Onboarding / Settings modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="settingsTitle">Settings</div>
-    <label>App name (optional)</label>
-    <input type="text" id="setAppName" placeholder="e.g. My Budget">
-    <label>Monthly budget ($)</label>
-    <input type="number" inputmode="decimal" id="setBudget" placeholder="e.g. 3000">
-    <label>CC statement starts on day</label>
-    <input type="number" inputmode="numeric" id="setCycleDay" placeholder="e.g. 1" min="1" max="28">
-    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">
-      Example: if your statement closes on the 17th, enter <strong style="color:var(--text)">18</strong> (the day the new cycle starts).
-    </div>
-    <label>City</label>
-    <input type="text" id="setCity" placeholder="e.g. Sydney">
-    <label>Country</label>
-    <input type="text" id="setCountry" placeholder="e.g. Australia">
-    <div id="setTimezoneDisplay" style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px"></div>
-    <div style="margin-top:4px;padding-top:16px;border-top:1px solid var(--surface2)">
-      <div style="font-size:13px;font-weight:700;margin-bottom:12px">Expense amount colours</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colours shown on expense amounts based on how much of the category budget has been spent.</div>
+    <div class="modal-title" id="settingsTitle" style="text-align:center">Settings</div>
+
+    <!-- Hidden form fields still needed by saveSettings() -->
+    <div style="display:none">
+      <input type="text" id="setAppName">
+      <input type="number" id="setBudget">
+      <input type="number" id="setCycleDay">
+      <input type="text" id="setCity">
+      <input type="text" id="setCountry">
+      <div id="setTimezoneDisplay"></div>
       <div id="spendColorRows"></div>
     </div>
-    <button class="btn-primary" onclick="saveSettings()">Save settings</button>
-    <button class="btn-ghost" onclick="closeModal('settingsModal')">Cancel</button>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--surface2);text-align:center">
-      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Spendly v<span id="appVersionDisplay"></span></div>
-        <div style="font-size:11px;color:var(--muted)">Built <span id="appBuildTime"></span></div>
-      </div>
-      <button onclick="forceAppUpdate()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--muted);font-family:var(--font);cursor:pointer;width:100%;margin-bottom:8px">🔄 Check for update</button>
-      <button onclick="signOut()" style="background:none;border:1px solid var(--red-dim);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--red);font-family:var(--font);cursor:pointer;width:100%">Sign out</button>
+
+    <!-- ── App identity card ─────────────────────────────── -->
+    <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 24px">
+      <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#1a5cff,#34C759);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px;box-shadow:0 4px 20px rgba(79,142,247,0.3)">💚</div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-0.5px">Spendly</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">v<span id="appVersionDisplay"></span> · <span id="appBuildTime"></span></div>
     </div>
+
+    <!-- ── Preferences group ─────────────────────────────── -->
+    <div class="settings-section-label">Preferences</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="openSettingsSheet('budget')">
+        <span class="settings-row-icon" style="background:#4F8EF7">💰</span>
+        <span class="settings-row-label">Budget & cycle</span>
+        <span class="settings-row-chevron">›</span>
+      </div>
+      <div class="settings-row" onclick="openSettingsSheet('appearance')">
+        <span class="settings-row-icon" style="background:#FF9F0A">🎨</span>
+        <span class="settings-row-label">Amount colours</span>
+        <span class="settings-row-chevron">›</span>
+      </div>
+      <div class="settings-row" onclick="closeModal('settingsModal');openTabCustomise()">
+        <span class="settings-row-icon" style="background:#8E8E93">⚙️</span>
+        <span class="settings-row-label">Manage tabs</span>
+        <span class="settings-row-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- ── Security group ────────────────────────────────── -->
+    <div class="settings-section-label">Security</div>
+    <div class="settings-group" id="faceIdSettingsSection">
+      <div class="settings-row" onclick="setupFaceId()">
+        <span class="settings-row-icon" style="background:#30D158">🔐</span>
+        <span class="settings-row-label" id="faceIdSettingsLabel">Enable Face ID</span>
+        <span class="settings-row-chevron" id="faceIdSettingsChevron">›</span>
+      </div>
+    </div>
+
+    <!-- ── Data group ─────────────────────────────────────── -->
+    <div class="settings-section-label">Data</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="exportBackup()">
+        <span class="settings-row-icon" style="background:#4F8EF7">⬇️</span>
+        <span class="settings-row-label">Export backup</span>
+        <span class="settings-row-chevron">›</span>
+      </div>
+      <div class="settings-row" onclick="document.getElementById('importFileInput').click()">
+        <span class="settings-row-icon" style="background:#FF9F0A">⬆️</span>
+        <span class="settings-row-label">Restore from backup</span>
+        <span class="settings-row-chevron">›</span>
+      </div>
+      <input type="file" id="importFileInput" accept=".spendly,.json" style="display:none" onchange="importBackup(this)">
+    </div>
+
+    <!-- ── About group ────────────────────────────────────── -->
+    <div class="settings-section-label">About</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="forceAppUpdate()">
+        <span class="settings-row-icon" style="background:#34C759">🔄</span>
+        <span class="settings-row-label">Check for update</span>
+        <span class="settings-row-sub" id="appVersionDisplay2"></span>
+        <span class="settings-row-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- ── Sign out ───────────────────────────────────────── -->
+    <div id="signOutBtn" class="settings-group" style="margin-top:24px">
+      <div class="settings-row" onclick="signOut()">
+        <span class="settings-row-icon" style="background:#FF5C5C">🚪</span>
+        <span class="settings-row-label" style="color:var(--red)">Sign out</span>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+  </div>
+</div>
+
+<!-- Settings sub-sheet: Budget & cycle -->
+<div class="modal-overlay" id="settingsBudgetModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Budget & cycle</div>
+    <label>App name (optional)</label>
+    <input type="text" id="setAppName2" placeholder="e.g. Ciro's Budget">
+    <label>Budget amount ($)</label>
+    <input type="number" inputmode="decimal" id="setBudget2" placeholder="e.g. 8000">
+    <label>Cycle type</label>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <button id="setCycleTypeMonthly" onclick="settingsSetCycleType('monthly')" class="wb-cycle-type-btn active">📅<br><span>Monthly</span></button>
+      <button id="setCycleTypeFortnightly" onclick="settingsSetCycleType('fortnightly')" class="wb-cycle-type-btn">🗓️<br><span>Fortnightly</span></button>
+      <button id="setCycleTypeWeekly" onclick="settingsSetCycleType('weekly')" class="wb-cycle-type-btn">📆<br><span>Weekly</span></button>
+    </div>
+    <div id="setMonthlyCycleFields">
+      <label>Cycle starts on day</label>
+      <input type="number" inputmode="numeric" id="setCycleDay2" placeholder="e.g. 18" min="1" max="28">
+      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">
+        Enter the day your new cycle starts each month. For example, if it resets on the 18th, enter <strong style="color:var(--text)">18</strong>.
+      </div>
+    </div>
+    <div id="setAnchorCycleFields" style="display:none">
+      <label>Most recent cycle start date</label>
+      <input type="date" id="setCycleAnchor2">
+      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">
+        Enter the date your most recent cycle started — Spendly will calculate all future cycles from there.
+      </div>
+    </div>
+    <label>City</label>
+    <input type="text" id="setCity2" placeholder="e.g. Sydney">
+    <label>Country</label>
+    <input type="text" id="setCountry2" placeholder="e.g. Australia">
+    <div id="setTimezoneDisplay2" style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px"></div>
+    <button class="btn-primary" onclick="saveBudgetSettings()">Save</button>
+    <button class="btn-ghost" onclick="closeModal('settingsBudgetModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Settings sub-sheet: Appearance -->
+<div class="modal-overlay" id="settingsAppearanceModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Amount colours</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Colours shown on expense amounts based on how much of the category budget has been spent.</div>
+    <div id="spendColorRows2"></div>
+    <button class="btn-primary" onclick="saveAppearanceSettings()">Save</button>
+    <button class="btn-ghost" onclick="closeModal('settingsAppearanceModal')">Cancel</button>
   </div>
 </div>
 
@@ -1010,15 +1212,19 @@ async function applyUpdate() {
 <div class="modal-overlay" id="mortgageRateModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Update interest rate</div>
-    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.6">
+    <div class="modal-title" id="mortgageRateModalTitle">Update interest rate</div>
+    <div id="mortgageRateModalInfo" style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.6">
       Changing the rate only affects calculations <strong style="color:var(--text)">from today forward</strong>. All previous repayments and interest savings are preserved.
     </div>
-    <label>New annual interest rate (%)</label>
+    <label>Annual interest rate (%)</label>
     <input type="number" inputmode="decimal" id="mgNewRate" placeholder="e.g. 5.89" step="0.01" oninput="checkRateChanged()">
-    <label>Effective from (today or future only)</label>
-    <input type="date" id="mgRateFromDate" min="" oninput="checkRateChanged()">
+    <label id="mgRateDateLabel">Effective from (today or future only)</label>
+    <input type="date" id="mgRateFromDate" oninput="checkRateChanged()">
+    <label>Minimum weekly repayment ($) <span style="color:var(--muted);font-weight:400;font-size:11px">— optional</span></label>
+    <input type="number" inputmode="decimal" id="mgRateMinRepayment" placeholder="e.g. 650.00" step="0.01" min="0">
+    <div style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px;line-height:1.5">The bank's minimum required repayment at this rate. Useful for tracking how it changed over time.</div>
     <button class="btn-primary" id="mgRateSaveBtn" onclick="saveMortgageRate()" disabled style="opacity:0.4">Update rate</button>
+    <button class="btn-danger" id="mgRateDeleteBtn" onclick="deleteMortgageRateEntry()" style="display:none">Remove entry</button>
     <button class="btn-ghost" onclick="closeModal('mortgageRateModal')">Cancel</button>
   </div>
 </div>
@@ -1052,8 +1258,11 @@ async function applyUpdate() {
     <div class="modal-title">Mortgage details</div>
     <label>Original loan amount ($)</label>
     <input type="number" inputmode="decimal" id="mgLoanAmount" placeholder="e.g. 604000">
-    <label>Current balance ($) — from your bank app</label>
-    <input type="number" inputmode="decimal" id="mgCurrentBalance" placeholder="e.g. 581418.61" step="0.01">
+    <label>Known balance ($) — from your bank app</label>
+    <input type="number" inputmode="decimal" id="mgCurrentBalance" placeholder="e.g. 583168.61" step="0.01">
+    <label>Balance as of (date from bank app)</label>
+    <input type="date" id="mgBalanceAsOf">
+    <div style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px;line-height:1.5">Spendly will calculate your estimated current balance from this date using your repayments and interest charges.</div>
     <label>Annual interest rate (%)</label>
     <input type="number" inputmode="decimal" id="mgRate" placeholder="e.g. 5.35" step="0.01">
     <label>Loan start date</label>
@@ -1139,7 +1348,11 @@ async function applyUpdate() {
     <div class="modal-handle"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="modal-title" style="margin-bottom:0">Recurring expenses</div>
-      <button onclick="openAddRecurring()" style="background:var(--accent-dim);color:var(--accent);border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">+ Add</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="repairMissingRecurringExpenses();showToast('✅ Checked for missed recurring expenses',2500)" style="background:var(--surface2);color:var(--muted);border:none;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer" title="Apply any missed transactions for today">↻ Apply today</button>
+        <button onclick="openAddRecurring()" style="background:var(--accent-dim);color:var(--accent);border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">+ Add</button>
+        <button onclick="showRecurringDiagnostic()" style="background:var(--surface2);color:var(--muted);border:none;border-radius:8px;padding:7px 10px;font-size:11px;font-family:var(--font);cursor:pointer" title="Diagnostic">🔍</button>
+      </div>
     </div>
     <div id="recurringListContent"></div>
     <button class="btn-ghost" onclick="closeModal('recurringListModal')">Close</button>
@@ -1152,11 +1365,11 @@ async function applyUpdate() {
     <div class="modal-handle"></div>
     <div class="modal-title" id="recurringModalTitle">New recurring expense</div>
     <label>Description</label>
-    <input type="text" id="recName" placeholder="e.g. Netflix, Mortgage, Strata">
+    <input type="text" id="recName" placeholder="e.g. Netflix, Mortgage, Strata" oninput="checkRecChanged()">
     <label>Amount ($)</label>
-    <input type="number" inputmode="decimal" id="recAmount" placeholder="0.00" step="0.01" min="0">
+    <input type="number" inputmode="decimal" id="recAmount" placeholder="0.00" step="0.01" min="0" oninput="checkRecChanged()">
     <label>Category</label>
-    <select id="recCat" onchange="updateRecOffsetVisibility()"></select>
+    <select id="recCat" onchange="updateRecOffsetVisibility();checkRecChanged()"></select>
     <label>Frequency</label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px" id="recFreqBtns">
       <button type="button" onclick="setRecFreq('weekly')" id="recFreqWeekly" style="padding:10px;border-radius:10px;border:2px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-weight:700;font-family:var(--font);cursor:pointer;font-size:13px">Weekly</button>
@@ -1181,26 +1394,26 @@ async function applyUpdate() {
     <!-- Every X weeks: pick number of weeks + start date -->
     <div id="recXweeksSection" style="display:none;margin-bottom:14px">
       <label>Repeat every how many weeks?</label>
-      <input type="number" inputmode="numeric" id="recXweeksNum" placeholder="e.g. 3" min="1" max="52" oninput="updateRecPreview()" style="margin-bottom:10px">
+      <input type="number" inputmode="numeric" id="recXweeksNum" placeholder="e.g. 3" min="1" max="52" oninput="updateRecPreview();checkRecChanged()" style="margin-bottom:10px">
       <label>Last done / start date</label>
-      <input type="date" id="recXweeksDate" oninput="updateRecPreview()">
+      <input type="date" id="recXweeksDate" oninput="updateRecPreview();checkRecChanged()">
       <div style="font-size:11px;color:var(--muted);margin-top:-8px">Next occurrence will be calculated from this date</div>
     </div>
     <!-- Monthly: pick day of month -->
     <div id="recMonthlySection" style="display:none;margin-bottom:14px">
       <label>Day of month</label>
-      <input type="number" inputmode="numeric" id="recMonthDay" placeholder="e.g. 28" min="1" max="31" oninput="updateRecPreview()">
+      <input type="number" inputmode="numeric" id="recMonthDay" placeholder="e.g. 28" min="1" max="31" oninput="updateRecPreview();checkRecChanged()">
     </div>
     <!-- Quarterly: pick start date -->
     <div id="recQuarterlySection" style="display:none;margin-bottom:14px">
       <label>Next due date</label>
-      <input type="date" id="recQuarterlyDate">
+      <input type="date" id="recQuarterlyDate" oninput="checkRecChanged()">
       <div style="font-size:11px;color:var(--muted);margin-top:-8px">Will repeat every 3 months from this date</div>
     </div>
     <!-- Yearly: pick date -->
     <div id="recYearlySection" style="display:none;margin-bottom:14px">
       <label>Next due date</label>
-      <input type="date" id="recYearlyDate" oninput="updateRecPreview()">
+      <input type="date" id="recYearlyDate" oninput="updateRecPreview();checkRecChanged()">
       <div style="font-size:11px;color:var(--muted);margin-top:-8px">Will repeat every year on this date</div>
     </div>
     <div id="recPreview" style="font-size:12px;color:var(--muted);margin-bottom:14px;min-height:16px;background:var(--surface2);border-radius:8px;padding:8px 10px;display:none"></div>
@@ -1219,7 +1432,7 @@ async function applyUpdate() {
     </div>
     <button class="btn-primary" id="recSaveBtn" onclick="saveRecurring()">Save</button>
     <button class="btn-danger" id="recDeleteBtn" onclick="deleteRecurring()" style="display:none">Delete</button>
-    <button class="btn-ghost" onclick="closeModal('recurringModal')">Cancel</button>
+    <button class="btn-ghost" onclick="cancelRecurring()">Cancel</button>
   </div>
 </div>
 
@@ -1387,7 +1600,8 @@ async function applyUpdate() {
     <label>Source / note <span style="font-size:10px;color:var(--muted)">(optional)</span></label>
     <input type="text" id="propertyValNote" placeholder="e.g. Bank valuation, Domain estimate, Agent appraisal">
     <div id="propertyEquityPreview" style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--muted);min-height:36px"></div>
-    <button class="btn-primary" onclick="savePropertyValue()">Save valuation</button>
+    <button class="btn-primary" id="propertyValSaveBtn" onclick="savePropertyValue()">Save valuation</button>
+    <button class="btn-danger" id="propertyValDeleteBtn" onclick="deletePropertyValuation()" style="display:none">Delete valuation</button>
     <button class="btn-ghost" onclick="closeModal('propertyModal')">Cancel</button>
   </div>
 </div>
@@ -1442,9 +1656,12 @@ const PALETTE = [
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const APP_VERSION = '1.4.1';
-const BUILD_DATE = '2026-03-21';
-const BUILD_TIME = '21 Mar 2026 12:29 PM AEDT';
+const APP_VERSION = '1.7.6';
+const BUILD_DATE = '2026-03-22';
+const BUILD_TIME = '22 Mar 2026 4:39 PM AEDT';
+const LAST_BACKUP_NUDGE_KEY = 'spendly_last_backup_nudge';
+const LAST_EXPORT_KEY = 'spendly_last_export';
+
 const STORAGE_KEY = 'spendly_generic_v1';
 const LOCK_KEY = 'spendly_pin_hash';
 const BIOM_KEY = 'spendly_biometric';
@@ -1463,6 +1680,8 @@ let state = {
   country: 'Australia',
   budget: 0,
   cycleDay: 1,
+  cycleType: 'monthly',  // 'monthly' | 'weekly' | 'fortnightly'
+  cycleAnchorDate: '',   // anchor date for weekly/fortnightly cycles (YYYY-MM-DD)
   categories: [],  // { id, name, icon, color, type, budgetLimit }
   expenses: [],    // { id, amount, name, categoryId, date }
   currentTab: 'expenses',
@@ -1553,19 +1772,46 @@ function showAuthScreen() {
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('app').style.visibility = 'hidden';
   switchAuthTab('login');
+  startAutofillPoller();
 }
 
 function hideAuthScreen() {
   document.getElementById('authScreen').classList.add('hidden');
+  stopAutofillPoller();
   showApp();
+}
+
+// ── Autofill detection ────────────────────────────────────────────────────────
+// iOS autofill doesn't fire input/change events reliably — poll for both fields
+// being filled and auto-submit in login mode only
+let _autofillPoller = null;
+function startAutofillPoller() {
+  stopAutofillPoller();
+  _autofillPoller = setInterval(() => {
+    if (authMode !== 'login') return;
+    const email = document.getElementById('authEmail');
+    const pass = document.getElementById('authPassword');
+    const btn = document.getElementById('authSubmitBtn');
+    if (email && pass && email.value.trim() && pass.value && !btn.disabled) {
+      stopAutofillPoller();
+      // Small delay so autofill fully completes before submitting
+      setTimeout(() => handleAuthSubmit(), 400);
+    }
+  }, 300);
+}
+function stopAutofillPoller() {
+  if (_autofillPoller) { clearInterval(_autofillPoller); _autofillPoller = null; }
 }
 
 function switchAuthTab(mode) {
   authMode = mode;
+  if (mode === 'signup') stopAutofillPoller();
+  else startAutofillPoller();
   document.getElementById('authTabLogin').classList.toggle('active', mode === 'login');
   document.getElementById('authTabSignup').classList.toggle('active', mode === 'signup');
   document.getElementById('authPasswordConfirm').style.display = mode === 'signup' ? '' : 'none';
   document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Sign in' : 'Create account';
+  document.getElementById('authForgotBtn').style.display = mode === 'login' ? '' : 'none';
   document.getElementById('authError').textContent = '';
   document.getElementById('authHint').textContent = mode === 'login'
     ? 'Your data is private and encrypted. Only you can access it.'
@@ -1621,7 +1867,7 @@ async function handleAuthSubmit() {
     renderContent();
     initVersionDisplay();
     if (!initWelcome()) { showApp(); initLock(); }
-    applyRecurringExpenses();
+    repairMissingRecurringExpenses(); applyRecurringExpenses();
     recordTodayOffsetSaving();
     setTimeout(checkCycleComplete, 2000);
     setTimeout(checkExpiryAlerts, 1500);
@@ -1629,6 +1875,37 @@ async function handleAuthSubmit() {
     errEl.textContent = 'Something went wrong. Please try again.';
     btn.disabled = false;
     btn.textContent = authMode === 'login' ? 'Sign in' : 'Create account';
+  }
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email) {
+    errEl.textContent = 'Enter your email address above first.';
+    document.getElementById('authEmail').focus();
+    return;
+  }
+  const btn = document.getElementById('authForgotBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    const { error } = await getSB().auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    if (error) {
+      errEl.textContent = friendlyAuthError(error.message);
+    } else {
+      errEl.style.color = 'var(--accent)';
+      errEl.textContent = '✅ Reset link sent — check your email.';
+      setTimeout(() => { errEl.textContent = ''; errEl.style.color = ''; }, 6000);
+    }
+  } catch(e) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Forgot password?';
   }
 }
 
@@ -1710,31 +1987,34 @@ function saveState() {
   try { localStorage.setItem(BACKUP_KEY, data); } catch(e) {}
   try { sessionStorage.setItem(BACKUP_KEY2, data); } catch(e) {}
   try { localStorage.setItem(BACKUP_TS_KEY, new Date().toISOString()); } catch(e) {}
-  // Debounce cloud sync — wait 1.5s after last change
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => syncToSupabase(persistState), 1500);
+  // Cloud sync only in cloud mode
+  if (SPENDLY_MODE === 'cloud') {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncToSupabase(persistState), 1500);
+  }
 }
 
 async function loadState() {
-  // Try cloud first
-  const cloudData = await loadFromSupabase();
-  if (cloudData && typeof cloudData === 'object') {
-    const hasData = cloudData.budget > 0 ||
-      (cloudData.categories && cloudData.categories.length > 0) ||
-      (cloudData.expenses && cloudData.expenses.length > 0) ||
-      (cloudData.savingsCategories && cloudData.savingsCategories.length > 0);
-    if (hasData) {
-      state = { ...state, ...cloudData };
-      // If they have data they're clearly onboarded — mark it
-      if (!state.setupDone) { state.setupDone = true; }
-      localStorage.setItem(ONBOARDED_KEY, '1');
-      saveState();
-      setSyncStatus('saved');
-      setTimeout(() => setSyncStatus('idle'), 2000);
-      return;
+  // In cloud mode — try Supabase first
+  if (SPENDLY_MODE === 'cloud') {
+    const cloudData = await loadFromSupabase();
+    if (cloudData && typeof cloudData === 'object') {
+      const hasData = cloudData.budget > 0 ||
+        (cloudData.categories && cloudData.categories.length > 0) ||
+        (cloudData.expenses && cloudData.expenses.length > 0) ||
+        (cloudData.savingsCategories && cloudData.savingsCategories.length > 0);
+      if (hasData) {
+        state = { ...state, ...cloudData };
+        if (!state.setupDone) { state.setupDone = true; }
+        localStorage.setItem(ONBOARDED_KEY, '1');
+        saveState();
+        setSyncStatus('saved');
+        setTimeout(() => setSyncStatus('idle'), 2000);
+        return;
+      }
     }
   }
-  // Fall back to localStorage
+  // Local mode or cloud fallback — read from localStorage
   const sources = [
     () => localStorage.getItem(STORAGE_KEY),
     () => localStorage.getItem(BACKUP_KEY),
@@ -1747,7 +2027,7 @@ async function loadState() {
         const parsed = JSON.parse(saved);
         if (parsed && (parsed.budget > 0 || (parsed.categories && parsed.categories.length > 0) || (parsed.expenses && parsed.expenses.length > 0))) {
           state = { ...state, ...parsed };
-          saveState(); // push to cloud too
+          if (SPENDLY_MODE === 'cloud') saveState(); // push to cloud too
           return;
         }
       }
@@ -1756,7 +2036,7 @@ async function loadState() {
   for (const src of sources) {
     try {
       const saved = src();
-      if (saved) { state = { ...state, ...JSON.parse(saved) }; saveState(); return; }
+      if (saved) { state = { ...state, ...JSON.parse(saved) }; return; }
     } catch(e) {}
   }
 }
@@ -1858,6 +2138,27 @@ function getSpendColor(categoryId) {
 function getCycleRange(offset) {
   if (offset === undefined) offset = state.viewingCycleOffset || 0;
   const today = new Date(); today.setHours(0,0,0,0);
+  const cycleType = state.cycleType || 'monthly';
+
+  if (cycleType === 'weekly' || cycleType === 'fortnightly') {
+    const days = cycleType === 'weekly' ? 7 : 14;
+    // Use anchorDate as the reference start point
+    const anchorStr = state.cycleAnchorDate || todayStr();
+    const anchor = new Date(anchorStr + 'T00:00:00');
+    // Find how many full cycles have elapsed since anchor
+    const elapsed = Math.floor((today - anchor) / (days * 86400000));
+    // Current cycle start = anchor + elapsed * days
+    const currentStart = new Date(anchor);
+    currentStart.setDate(anchor.getDate() + elapsed * days);
+    // Apply offset
+    const cycleStart = new Date(currentStart);
+    cycleStart.setDate(currentStart.getDate() + offset * days);
+    const cycleEnd = new Date(cycleStart);
+    cycleEnd.setDate(cycleStart.getDate() + days - 1);
+    return { cycleStart, cycleEnd };
+  }
+
+  // Monthly (default)
   const d = today.getDate();
   const cd = state.cycleDay || 1;
   let cycleStart, cycleEnd;
@@ -1886,25 +2187,32 @@ function cycleExpenses() {
   });
 }
 
-// Returns recurring expenses due AFTER today but before cycle end (upcoming/committed)
+// Returns recurring expenses due TODAY (not yet logged) or AFTER today — within cycle
 function getUpcomingRecurring() {
   if (!isCurrentCycle()) return [];
   const { cycleStart, cycleEnd } = getCycleRange(0);
   const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr_ = todayStr();
   const recs = (state.recurringExpenses || []).filter(r => r.active !== false);
   const upcoming = [];
   recs.forEach(r => {
-    // Get all occurrences within the cycle that are strictly after today
     let d = getRecNextDate(r);
     if (!d) return;
     d.setHours(0,0,0,0);
-    // Walk forward through all occurrences within this cycle that are future
     const visited = new Set();
     while (d <= cycleEnd) {
       const key = dateToStr(d);
       if (visited.has(key)) break;
       visited.add(key);
-      if (d > today && d >= cycleStart) {
+      // Include today ONLY if the expense hasn't been logged yet
+      const isDueToday = key === todayStr_;
+      const alreadyLoggedToday = isDueToday && (state.expenses || []).some(e =>
+        e.categoryId === r.categoryId &&
+        e.date === todayStr_ &&
+        e.amount === r.amount &&
+        e.name === r.name
+      );
+      if (d >= cycleStart && (d > today || (isDueToday && !alreadyLoggedToday))) {
         upcoming.push({
           id: r.id + '_' + key,
           recurringId: r.id,
@@ -2037,12 +2345,223 @@ function updateHeader() {
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
+// ── Tab config ────────────────────────────────────────────────────────────────
+const ALL_TABS = [
+  { id:'expenses',  icon:'💸', label:'Expenses',  locked:true  },
+  { id:'goals',     icon:'🎯', label:'Budget'              },
+  { id:'savings',   icon:'💰', label:'Savings'             },
+  { id:'recycling', icon:'♻️', label:'Recycling'           },
+  { id:'mortgage',  icon:'🏠', label:'Mortgage'            },
+  { id:'tax',       icon:'🧾', label:'Tax'                 },
+  { id:'giftcards', icon:'🎁', label:'Wallet'              },
+  { id:'portfolio', icon:'📈', label:'Portfolio'           },
+  { id:'networth',  icon:'💎', label:'Net Worth'           },
+  { id:'investor',  icon:'💡', label:'Investor'            },
+  { id:'analytics', icon:'📊', label:'Analytics'           },
+  { id:'notes',     icon:'📝', label:'Notes'               },
+];
+
+const DEFAULT_TAB_IDS = ['expenses', 'goals', 'savings', 'analytics'];
+
+function getTabConfig() {
+  // Returns ordered array of { id, icon, label, enabled, locked }
+  // Merges saved state.tabConfig with ALL_TABS (handles new tabs added later)
+  const saved = state.tabConfig || [];
+
+  // Brand new user — no saved config yet: enable only default tabs
+  if (saved.length === 0) {
+    return ALL_TABS.map(t => ({
+      ...t,
+      enabled: DEFAULT_TAB_IDS.includes(t.id),
+    }));
+  }
+
+  const savedMap = {};
+  saved.forEach(t => { savedMap[t.id] = t; });
+
+  // Build ordered list: saved order first, then any new tabs not yet in saved
+  const result = [];
+  saved.forEach(t => {
+    const def = ALL_TABS.find(d => d.id === t.id);
+    if (def) result.push({ ...def, enabled: t.enabled !== false });
+  });
+  ALL_TABS.forEach(def => {
+    if (!savedMap[def.id]) result.push({ ...def, enabled: true });
+  });
+
+  // Expenses always first and always enabled
+  const expIdx = result.findIndex(t => t.id === 'expenses');
+  if (expIdx > 0) { const [exp] = result.splice(expIdx, 1); result.unshift(exp); }
+  if (result.length > 0) { result[0].enabled = true; result[0].locked = true; }
+
+  return result;
+}
+
+function renderTabs() {
+  const container = document.getElementById('tabsContainer');
+  if (!container) return;
+  const config = getTabConfig();
+  const enabled = config.filter(t => t.enabled);
+  const hasHidden = config.some(t => !t.enabled);
+
+  let html = '<div class="tabs">';
+  enabled.forEach(t => {
+    const isActive = state.currentTab === t.id;
+    html += '<button class="tab' + (isActive ? ' active' : '') + '" onclick="switchTab(\'' + t.id + '\')">' +
+      '<span class="tab-icon">' + t.icon + '</span>' + t.label +
+      '</button>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Show hint if some tabs are hidden
+  const hint = document.getElementById('tabsHint');
+  if (hint) hint.style.display = hasHidden ? '' : 'none';
+}
+
+// ── Tab customise modal ───────────────────────────────────────────────────────
+let _tabDraftConfig = []; // working copy while modal is open
+let _dragSrcIdx = null;
+
+function openTabCustomise() {
+  _tabDraftConfig = getTabConfig().map(t => ({ ...t }));
+  renderTabCustomiseList();
+  openModal('tabCustomiseModal');
+}
+
+function renderTabCustomiseList() {
+  const list = document.getElementById('tabCustomiseList');
+  if (!list) return;
+  list.innerHTML = _tabDraftConfig.map((t, i) =>
+    '<div class="tab-config-item" data-idx="' + i + '">' +
+      '<span style="font-size:20px;flex-shrink:0">' + t.icon + '</span>' +
+      '<span style="flex:1;font-size:14px;font-weight:500">' + t.label + '</span>' +
+      '<div style="display:flex;flex-direction:column;gap:3px;margin-right:10px">' +
+        '<button onclick="tabMoveUp(' + i + ')" ' + (i <= 1 ? 'disabled style="opacity:0.2"' : 'style="opacity:0.8"') + ' style="background:var(--surface2);border:none;border-radius:5px;width:26px;height:22px;font-size:12px;cursor:pointer;color:var(--text);font-family:var(--font);line-height:1' + (i <= 1 ? ';opacity:0.2' : '') + '">▲</button>' +
+        '<button onclick="tabMoveDown(' + i + ')" ' + (i === _tabDraftConfig.length - 1 ? 'disabled style="opacity:0.2"' : 'style="opacity:0.8"') + ' style="background:var(--surface2);border:none;border-radius:5px;width:26px;height:22px;font-size:12px;cursor:pointer;color:var(--text);font-family:var(--font);line-height:1' + (i === _tabDraftConfig.length - 1 ? ';opacity:0.2' : '') + '">▼</button>' +
+      '</div>' +
+      (t.locked
+        ? '<span class="tab-config-locked">Always on</span>'
+        : '<button class="tab-config-toggle ' + (t.enabled ? 'on' : 'off') + '" onclick="toggleTabDraft(' + i + ')" ontouchend="event.stopPropagation();toggleTabDraft(' + i + ')" ontouchstart="event.stopPropagation()"></button>'
+      ) +
+    '</div>'
+  ).join('');
+}
+
+function tabMoveUp(idx) {
+  if (idx <= 1) return; // can't move above expenses (idx 0) or to idx 0
+  const temp = _tabDraftConfig[idx];
+  _tabDraftConfig[idx] = _tabDraftConfig[idx - 1];
+  _tabDraftConfig[idx - 1] = temp;
+  renderTabCustomiseList();
+}
+
+function tabMoveDown(idx) {
+  if (idx >= _tabDraftConfig.length - 1) return;
+  if (idx === 0) return; // can't move expenses down
+  const temp = _tabDraftConfig[idx];
+  _tabDraftConfig[idx] = _tabDraftConfig[idx + 1];
+  _tabDraftConfig[idx + 1] = temp;
+  renderTabCustomiseList();
+}
+
+function toggleTabDraft(idx) {
+  if (_tabDraftConfig[idx].locked) return;
+  _tabDraftConfig[idx].enabled = !_tabDraftConfig[idx].enabled;
+  renderTabCustomiseList();
+}
+
+// Drag and drop
+function tabDragStart(e, idx) {
+  _dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { const el = e.currentTarget; if (el) el.classList.add('dragging'); }, 0);
+}
+function tabDragOver(e, idx) {
+  e.preventDefault();
+  if (_dragSrcIdx === null || _dragSrcIdx === idx) return;
+  document.querySelectorAll('.tab-config-item').forEach(el => el.classList.remove('drag-over'));
+  e.currentTarget.classList.add('drag-over');
+}
+function tabDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function tabDrop(e, idx) {
+  e.preventDefault();
+  if (_dragSrcIdx === null || _dragSrcIdx === idx) return;
+  const src = _tabDraftConfig[_dragSrcIdx];
+  if (src.locked) return; // can't move locked tab
+  _tabDraftConfig.splice(_dragSrcIdx, 1);
+  _tabDraftConfig.splice(idx, 0, src);
+  // Ensure expenses stays first
+  const expIdx = _tabDraftConfig.findIndex(t => t.id === 'expenses');
+  if (expIdx > 0) { const [exp] = _tabDraftConfig.splice(expIdx,1); _tabDraftConfig.unshift(exp); }
+  _dragSrcIdx = null;
+  renderTabCustomiseList();
+}
+function tabDragEnd() {
+  _dragSrcIdx = null;
+  document.querySelectorAll('.tab-config-item').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); });
+}
+
+// Touch drag support
+let _touchDragIdx = null, _touchClone = null, _touchStartY = 0;
+function tabTouchStart(e, idx) {
+  _touchDragIdx = idx;
+  _touchStartY = e.touches[0].clientY;
+}
+function tabTouchMove(e) {
+  if (_touchDragIdx === null) return;
+  e.preventDefault();
+  const y = e.touches[0].clientY;
+  const list = document.getElementById('tabCustomiseList');
+  const items = list.querySelectorAll('.tab-config-item');
+  items.forEach(el => el.classList.remove('drag-over'));
+  // Find which item the touch is over
+  for (let i = 0; i < items.length; i++) {
+    const rect = items[i].getBoundingClientRect();
+    if (y >= rect.top && y <= rect.bottom) {
+      items[i].classList.add('drag-over'); break;
+    }
+  }
+}
+function tabTouchEnd(e, srcIdx) {
+  if (_touchDragIdx === null) return;
+  const y = e.changedTouches[0].clientY;
+  const list = document.getElementById('tabCustomiseList');
+  const items = list.querySelectorAll('.tab-config-item');
+  let targetIdx = srcIdx;
+  for (let i = 0; i < items.length; i++) {
+    const rect = items[i].getBoundingClientRect();
+    if (y >= rect.top && y <= rect.bottom) { targetIdx = i; break; }
+  }
+  if (targetIdx !== srcIdx && !_tabDraftConfig[srcIdx].locked) {
+    const src = _tabDraftConfig[srcIdx];
+    _tabDraftConfig.splice(srcIdx, 1);
+    _tabDraftConfig.splice(targetIdx, 0, src);
+    const expIdx = _tabDraftConfig.findIndex(t => t.id === 'expenses');
+    if (expIdx > 0) { const [exp] = _tabDraftConfig.splice(expIdx,1); _tabDraftConfig.unshift(exp); }
+  }
+  _touchDragIdx = null;
+  renderTabCustomiseList();
+}
+
+function saveTabConfig() {
+  // Ensure at least expenses enabled
+  const enabledCount = _tabDraftConfig.filter(t => t.enabled).length;
+  if (enabledCount === 0) { showToast('At least one tab must be enabled.', 2000); return; }
+  state.tabConfig = _tabDraftConfig.map(t => ({ id: t.id, enabled: t.enabled }));
+  // If current tab was disabled, switch to expenses
+  const currentEnabled = _tabDraftConfig.find(t => t.id === state.currentTab && t.enabled);
+  if (!currentEnabled) state.currentTab = 'expenses';
+  saveState();
+  closeModal('tabCustomiseModal');
+  renderTabs();
+  renderContent();
+}
+
 function switchTab(tab) {
   if (tab !== 'expenses') expenseSearchQuery = '';
   state.currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['expenses','goals','savings','recycling','mortgage','tax','giftcards','portfolio','networth','investor','analytics','notes'][i] === tab);
-  });
+  renderTabs(); // re-render tabs to update active state
   const fab = document.getElementById('fab');
   const isPast = (state.viewingCycleOffset || 0) < 0;
   if (tab === 'calendar' || tab === 'recycling' || tab === 'mortgage' || tab === 'tax' || tab === 'investor' || tab === 'networth' || tab === 'notes') {
@@ -2074,6 +2593,7 @@ function switchTab(tab) {
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderContent() {
   setTimeout(initModalSwipeDown, 100);
+  renderTabs();
   if      (state.currentTab === 'expenses')  renderExpenses();
   else if (state.currentTab === 'analytics') renderAnalytics();
   else if (state.currentTab === 'goals')     renderGoals();
@@ -2260,28 +2780,35 @@ function renderExpenseResults(resultsEl) {
   if (!resultsEl) return;
   const query = expenseSearchQuery.trim().toLowerCase();
   const allExpenses = cycleExpenses().sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
-  const upcoming = isCurrentCycle() ? getUpcomingRecurring().sort((a,b) => a.date.localeCompare(b.date)) : [];
+  const allUpcoming = isCurrentCycle() ? getUpcomingRecurring().sort((a,b) => a.date.localeCompare(b.date)) : [];
 
   const expenses = query ? allExpenses.filter(e => {
     const cat = catById(e.categoryId);
     return (cat ? cat.name.toLowerCase() : '').includes(query) || (e.name||'').toLowerCase().includes(query);
   }) : allExpenses;
 
-  // (searchBar is rendered by renderExpenses — not duplicated here)
+  // Filter upcoming when searching
+  const upcomingFiltered = query ? allUpcoming.filter(e => {
+    const cat = catById(e.categoryId);
+    return (cat ? cat.name.toLowerCase() : '').includes(query) || (e.name||'').toLowerCase().includes(query);
+  }) : allUpcoming;
 
   // ── Upcoming recurring section ─────────────────────────────────────────────
   let upcomingHTML = '';
-  if (upcoming.length > 0 && !query) {
-    const upTotal = upcoming.reduce((s,e) => s + e.amount, 0);
+  const showUpcoming = query ? upcomingFiltered.length > 0 : allUpcoming.length > 0;
+  const upcomingToShow = query ? upcomingFiltered : allUpcoming;
+
+  if (showUpcoming) {
+    const upTotal = upcomingToShow.reduce((s,e) => s + e.amount, 0);
     upcomingHTML = '<div style="background:rgba(79,142,247,0.06);border:1.5px solid rgba(79,142,247,0.2);border-radius:var(--r);margin-bottom:16px;overflow:hidden">';
     upcomingHTML += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 8px">' +
       '<div style="display:flex;align-items:center;gap:6px">' +
         '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--accent)" stroke-width="1.3"/><path d="M7 4v3l2 1.5" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round"/></svg>' +
-        '<span style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em">Coming up this cycle</span>' +
+        '<span style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em">' + (query ? 'Upcoming matches' : 'Coming up this cycle') + '</span>' +
       '</div>' +
       '<span style="font-size:12px;font-weight:700;color:var(--accent)">-' + fmt(upTotal) + ' committed</span>' +
     '</div>';
-    upcoming.forEach((e, i) => {
+    upcomingToShow.forEach((e, i) => {
       const cat = catById(e.categoryId) || { name:'Unknown', icon:'\u2753', color:'#888' };
       const dueDate = new Date(e.date + 'T00:00:00');
       const today = new Date(); today.setHours(0,0,0,0);
@@ -2289,7 +2816,7 @@ function renderExpenseResults(resultsEl) {
       const dueStr = daysUntilDue === 1 ? 'Tomorrow' : daysUntilDue === 0 ? 'Today' :
         dueDate.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
       upcomingHTML += '<div style="display:flex;align-items:center;gap:12px;padding:9px 14px;' + (i > 0 ? 'border-top:1px solid rgba(79,142,247,0.1)' : '') + '">' +
-        '<div style="width:36px;height:36px;border-radius:10px;background:' + cat.color + '22;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">' + cat.icon + '</div>' +
+        '<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">' + cat.icon + '</div>' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:500">' + e.name + '</div>' +
           '<div style="font-size:11px;color:var(--muted)">' + cat.name + ' \u00b7 ' + dueStr + '</div>' +
@@ -2310,9 +2837,23 @@ function renderExpenseResults(resultsEl) {
   const groups = {};
   expenses.forEach(e => { if (!groups[e.date]) groups[e.date] = []; groups[e.date].push(e); });
 
-  let html = upcomingHTML + buildSpendLegend();
+  let html = upcomingHTML + (query ? '' : buildSpendLegend());
+
   if (query) {
-    html += '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">' + expenses.length + ' result' + (expenses.length !== 1 ? 's' : '') + ' for \"<strong style=\"color:var(--text)\">' + query + '</strong>\"</div>';
+    const loggedTotal = expenses.reduce((s,e) => s + e.amount, 0);
+    const upcomingMatchTotal = upcomingFiltered.reduce((s,e) => s + e.amount, 0);
+    const grandTotal = loggedTotal + upcomingMatchTotal;
+    const totalCount = expenses.length + upcomingFiltered.length;
+    html += '<div style="background:var(--surface);border-radius:var(--r);padding:11px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">' +
+      '<div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + totalCount + ' result' + (totalCount !== 1 ? 's' : '') + ' for <strong style="color:var(--text)">"' + query + '"</strong></div>' +
+        (upcomingMatchTotal > 0 ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + expenses.length + ' logged · ' + upcomingFiltered.length + ' upcoming</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:16px;font-weight:700">' + fmt(grandTotal) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">total</div>' +
+      '</div>' +
+    '</div>';
   }
 
   Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(date => {
@@ -2330,7 +2871,7 @@ function renderExpenseResults(resultsEl) {
         '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 7h12M9 7V5h4v2M10 11v4M12 11v4M6 7l1 11h8l1-11" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '</div>' +
         '<div class="list-item" onclick="openEditExpense(\'' + e.id + '\')">' +
-        '<div class="cat-icon" style="background:' + cat.color + '22">' + cat.icon + '</div>' +
+        '<div class="cat-icon">' + cat.icon + '</div>' +
         '<div class="item-info"><div class="item-name">' + cat.name + '</div>' + (e.name ? '<div class="item-meta">' + e.name + '</div>' : '') + '</div>' +
         '<div class="item-amount" style="color:' + getSpendColor(e.categoryId) + '">' + fmt(e.amount) + '</div></div></div>';
     });
@@ -2359,7 +2900,7 @@ function onboardingHTML() {
     '<div class="onboard-step" style="' + (!hasPin ? 'opacity:0.45' : '') + '">' +
       '<div class="step-num ' + (hasBudget ? 'step-done' : '') + '">' + (hasBudget ? '✓' : '2') + '</div>' +
       '<div class="step-text"><div class="step-title">Set your budget & cycle</div>' +
-      '<div class="step-desc">Enter your monthly budget and the day your credit card cycle starts.</div></div>' +
+      '<div class="step-desc">Set your budget and choose how your spending cycle works — monthly, fortnightly, or weekly.</div></div>' +
       (hasPin ? '<button onclick="openSettings()" style="' + btnS + '">' + (hasBudget ? 'Edit' : 'Set up') + '</button>' : '<button style="' + dimS + '" disabled>Set up</button>') +
     '</div>' +
     '<div class="onboard-step" style="' + (!hasPin ? 'opacity:0.45' : '') + '">' +
@@ -3025,6 +3566,19 @@ function renderAnalyticsForecast() {
 }
 
 
+function toggleBudgetWarnTip(id) {
+  // Close any other open budget warn tips first
+  document.querySelectorAll('[id^="tip-budget-warn-"]').forEach(el => {
+    if (el.id !== id) el.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+// Close budget warn tips when tapping elsewhere
+document.addEventListener('click', () => {
+  document.querySelectorAll('[id^="tip-budget-warn-"]').forEach(el => { el.style.display = 'none'; });
+});
+
 function renderGoals() {
   const el = document.getElementById('content');
   const expenses = cycleExpenses();
@@ -3059,9 +3613,29 @@ function renderGoals() {
     const gSpent  = cats.reduce((s,c)=>s+(bycat[c.id]||0),0);
     const gLeft   = gBudget - gSpent;
 
+    // Sum of category lefts that are positive (what the table implies you can still spend)
+    const sumCatLefts = cats.reduce((s,c) => {
+      const left = (c.budgetLimit||0) - (bycat[c.id]||0);
+      return s + (left > 0 ? left : 0);
+    }, 0);
+    // Warning: the total pot left is less than what these categories suggest you can spend
+    const showWarning = totalLeft >= 0 && sumCatLefts > totalLeft + 0.01;
+    const tipId = 'tip-budget-warn-' + type;
+    const warningHtml = showWarning
+      ? ' <span style="position:relative;display:inline-flex;align-items:center">' +
+          '<span onclick="event.stopPropagation();toggleBudgetWarnTip(\'' + tipId + '\')" style="cursor:pointer;font-size:13px;line-height:1">⚠️</span>' +
+        '</span>'
+      : '';
+    const tooltipHtml = showWarning
+      ? '<div id="' + tipId + '" style="display:none;background:var(--surface);border:1px solid var(--orange);border-radius:10px;padding:12px 14px;margin:6px 0 10px;font-size:12px;color:var(--muted);line-height:1.6">' +
+          'Your total budget only has <strong style="color:var(--text)">' + fmt(totalLeft) + '</strong> left, but these categories show <strong style="color:var(--text)">' + fmt(sumCatLefts) + '</strong> available to spend. Using all that headroom would put you <strong style="color:var(--red)">' + fmt(sumCatLefts - totalLeft) + ' over budget</strong>.' +
+        '</div>'
+      : '';
+
     html += '<div class="section-label">' + (type==='fixed'?'Fixed':'Variable') + '</div>';
     html += '<div class="goals-table">';
-    html += '<div class="goals-table-header"><span>Category</span><span>Budget</span><span>Spent</span><span>Left</span></div>';
+    html += '<div class="goals-table-header"><span>Category</span><span>Budget</span><span>Spent' + warningHtml + '</span><span>Left</span></div>';
+    html += tooltipHtml;
     cats.forEach(cat => {
       const spent = bycat[cat.id] || 0;
       const budget = cat.budgetLimit || 0;
@@ -3211,18 +3785,145 @@ function renderCalendar() {
 
 // ── Settings modal ────────────────────────────────────────────────────────────
 function openSettings() {
-  document.getElementById('settingsTitle').textContent = isSetupComplete() ? 'Settings' : 'Welcome! Let\'s set up';
+  document.getElementById('settingsTitle').textContent = isSetupComplete() ? 'Settings' : 'Set up Spendly';
+  // Populate hidden fields (still used by legacy saveSettings path during onboarding)
   document.getElementById('setAppName').value = state.appName || '';
   document.getElementById('setBudget').value = state.budget || '';
   document.getElementById('setCycleDay').value = state.cycleDay || '';
   document.getElementById('setCity').value = state.city || '';
   document.getElementById('setCountry').value = state.country || 'Australia';
-  const tz = state.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const tzEl = document.getElementById('setTimezoneDisplay');
-  if (tzEl) tzEl.textContent = '🌏 Detected timezone: ' + tz;
   initVersionDisplay();
-  buildSpendColorRows();
+  // Update version display in new location
+  const v2 = document.getElementById('appVersionDisplay2');
+  if (v2) v2.textContent = APP_VERSION;
+  // Face ID section
+  const faceIdSection = document.getElementById('faceIdSettingsSection');
+  const hasPin = !!localStorage.getItem(LOCK_KEY);
+  if (faceIdSection) faceIdSection.style.display = (isBiometricSupported() && hasPin) ? '' : 'none';
+  renderSettingsFaceIdBtn();
+  // applyModeUI handles signOut/syncIndicator visibility
+  applyModeUI();
   openModal('settingsModal');
+}
+
+function settingsSetCycleType(type) {
+  ['monthly','fortnightly','weekly'].forEach(t => {
+    const btn = document.getElementById('setCycleType' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  const isMonthly = type === 'monthly';
+  document.getElementById('setMonthlyCycleFields').style.display = isMonthly ? '' : 'none';
+  document.getElementById('setAnchorCycleFields').style.display = isMonthly ? 'none' : '';
+}
+
+function openSettingsSheet(sheet) {
+  if (sheet === 'budget') {
+    document.getElementById('setAppName2').value = state.appName || '';
+    document.getElementById('setBudget2').value = state.budget || '';
+    document.getElementById('setCycleDay2').value = state.cycleDay || '';
+    document.getElementById('setCycleAnchor2').value = state.cycleAnchorDate || '';
+    document.getElementById('setCity2').value = state.city || '';
+    document.getElementById('setCountry2').value = state.country || 'Australia';
+    const tz = state.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzEl = document.getElementById('setTimezoneDisplay2');
+    if (tzEl) tzEl.textContent = '🌏 Detected timezone: ' + tz;
+    // Set cycle type buttons
+    settingsSetCycleType(state.cycleType || 'monthly');
+    openModal('settingsBudgetModal');
+  } else if (sheet === 'appearance') {
+    buildSpendColorRowsIn('spendColorRows2');
+    openModal('settingsAppearanceModal');
+  }
+}
+
+function saveBudgetSettings() {
+  const name = document.getElementById('setAppName2').value.trim();
+  const budget = parseFloat(document.getElementById('setBudget2').value) || 0;
+  const city = document.getElementById('setCity2').value.trim();
+  const country = document.getElementById('setCountry2').value.trim();
+  if (budget <= 0) { showToast('Please enter a budget amount', 2500); return; }
+  // Determine active cycle type from buttons
+  let cycleType = 'monthly';
+  ['monthly','fortnightly','weekly'].forEach(t => {
+    const btn = document.getElementById('setCycleType' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn && btn.classList.contains('active')) cycleType = t;
+  });
+  state.appName = name;
+  state.budget = budget;
+  state.cycleType = cycleType;
+  if (cycleType === 'monthly') {
+    const cycleDay = parseInt(document.getElementById('setCycleDay2').value) || 1;
+    state.cycleDay = Math.min(Math.max(cycleDay, 1), 28);
+    state.cycleAnchorDate = '';
+  } else {
+    state.cycleAnchorDate = document.getElementById('setCycleAnchor2').value || todayStr();
+    state.cycleDay = 1;
+  }
+  state.city = city;
+  state.country = country;
+  state.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  state.setupDone = true;
+  saveState();
+  closeModal('settingsBudgetModal');
+  updateHeader();
+  renderContent();
+  showToast('✅ Settings saved', 2000);
+}
+
+function saveAppearanceSettings() {
+  saveSpendColorsFrom('spendColorRows2');
+  saveState();
+  closeModal('settingsAppearanceModal');
+  renderContent();
+  showToast('✅ Colours saved', 2000);
+}
+
+function buildSpendColorRowsIn(containerId) {
+  const sc = state.spendingColors || {};
+  const rows = document.getElementById(containerId);
+  if (!rows) return;
+  const tiers = [
+    { key:'t1', label:'0% – ', maxKey:'t1Max', defaultMax:50, defaultColor:'#34C759', suffix:'%' },
+    { key:'t2', label:'', maxKey:'t2Max', defaultMax:70, defaultColor:'#f0d860', suffix:'%', prevKey:'t1Max' },
+    { key:'t3', label:'', maxKey:'t3Max', defaultMax:100, defaultColor:'#f0a860', suffix:'%', prevKey:'t2Max' },
+    { key:'t4', label:'100%+', defaultColor:'#ff5c5c', isOver:true },
+  ];
+  rows.innerHTML = tiers.map((t, i) => {
+    const color = sc[t.key+'Color'] || t.defaultColor;
+    const max = sc[t.maxKey] ?? t.defaultMax;
+    const prevMax = t.prevKey ? (sc[t.prevKey] ?? (i===1?50:70)) : null;
+    const rangeLabel = t.isOver ? '100%+' : (prevMax!==null ? prevMax+'% – '+max+'%' : '0% – '+max+'%');
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
+      '<input type="color" id="sc2_'+t.key+'_color" value="'+color+'" style="width:38px;height:38px;border-radius:8px;border:2px solid var(--border);cursor:pointer;padding:2px;background:var(--surface2)" onchange="updateSpendColorPreview2()">' +
+      (t.isOver
+        ? '<div style="flex:1;font-size:13px;font-weight:600;color:'+color+'" id="sc2_'+t.key+'_label">100%+ · Over budget</div>'
+        : '<div style="flex:1;display:flex;align-items:center;gap:6px">' +
+            (prevMax!==null ? '<span style="font-size:12px;color:var(--muted)">'+(sc[t.prevKey]??prevMax)+'% –</span>' : '<span style="font-size:12px;color:var(--muted)">0% –</span>') +
+            '<input type="number" id="sc2_'+t.key+'_max" value="'+(sc[t.maxKey]??t.defaultMax)+'" min="1" max="100" style="width:52px;margin-bottom:0;padding:6px 8px;font-size:13px" onchange="updateSpendColorPreview2()">' +
+            '<span style="font-size:12px;color:var(--muted)">%</span>' +
+          '</div>') +
+    '</div>';
+  }).join('');
+}
+
+function updateSpendColorPreview2() {
+  const tiers = ['t1','t2','t3','t4'];
+  tiers.forEach(t => {
+    const colorEl = document.getElementById('sc2_'+t+'_color');
+    const labelEl = document.getElementById('sc2_'+t+'_label');
+    if (colorEl && labelEl) labelEl.style.color = colorEl.value;
+  });
+}
+
+function saveSpendColorsFrom(containerId) {
+  const sc = state.spendingColors || {};
+  ['t1','t2','t3','t4'].forEach(t => {
+    const c = document.getElementById('sc2_'+t+'_color');
+    const m = document.getElementById('sc2_'+t+'_max');
+    if (c) sc[t+'Color'] = c.value;
+    if (m) sc[t+'Max'] = parseInt(m.value) || undefined;
+  });
+  state.spendingColors = sc;
 }
 
 function buildSpendColorRows() {
@@ -3520,59 +4221,6 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 window.addEventListener('resize', () => { updateHeader(); renderContent(); });
 
 
-// ── Swipe to dismiss modals ───────────────────────────────────────────────────
-function initSwipeToDismiss() {
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    const modal = overlay.querySelector('.modal');
-    if (!modal) return;
-    let startY = 0, currentY = 0, isDragging = false, startedOnHandle = false;
-
-    function onStart(e) {
-      const touch = e.touches ? e.touches[0] : e;
-      // Only initiate swipe if touch started on the handle or within top 32px of modal
-      const rect = modal.getBoundingClientRect();
-      const relY = touch.clientY - rect.top;
-      startedOnHandle = relY <= 32;
-      if (!startedOnHandle) return;
-      startY = touch.clientY;
-      currentY = 0;
-      isDragging = true;
-      modal.style.transition = 'none';
-    }
-
-    function onMove(e) {
-      if (!isDragging || !startedOnHandle) return;
-      const touch = e.touches ? e.touches[0] : e;
-      const dy = touch.clientY - startY;
-      if (dy < 0) { isDragging = false; return; } // upward swipe — ignore
-      currentY = dy;
-      modal.style.transform = 'translateY(' + currentY + 'px)';
-      overlay.style.background = 'rgba(0,0,0,' + Math.max(0, 0.7 - (currentY/400)*0.7) + ')';
-      if (e.cancelable) e.preventDefault();
-    }
-
-    function onEnd() {
-      if (!isDragging) return;
-      isDragging = false;
-      startedOnHandle = false;
-      modal.style.transition = '';
-      overlay.style.background = '';
-      if (currentY > 100) {
-        overlay.classList.remove('open');
-        modal.style.transform = '';
-      } else {
-        modal.style.transform = '';
-      }
-      currentY = 0;
-    }
-
-    modal.addEventListener('touchstart', onStart, { passive: true });
-    modal.addEventListener('touchmove', onMove, { passive: false });
-    modal.addEventListener('touchend', onEnd);
-  });
-}
-
-
 
 // ── Welcome onboarding ────────────────────────────────────────────────────────
 const ONBOARDED_KEY = 'spendly_onboarded';
@@ -3621,36 +4269,75 @@ function wbCheckName() {
   document.getElementById('wbNameBtn').disabled = val.length < 1;
 }
 
+let _wbCycleType = 'monthly';
+
+function wbSetCycleType(type) {
+  _wbCycleType = type;
+  ['monthly','fortnightly','weekly'].forEach(t => {
+    const btn = document.getElementById('wbCycleType' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  const isMonthly = type === 'monthly';
+  document.getElementById('wbMonthlyCycleFields').style.display = isMonthly ? '' : 'none';
+  document.getElementById('wbAnchorCycleFields').style.display = isMonthly ? 'none' : '';
+  if (!isMonthly && !document.getElementById('wbCycleAnchor').value) {
+    document.getElementById('wbCycleAnchor').value = todayStr();
+  }
+  wbCheckCycle();
+}
+
 function wbCheckCycle() {
   const budget = parseFloat(document.getElementById('wbBudget').value);
-  const cd = parseInt(document.getElementById('wbCycleDay').value);
-  const ok = budget > 0 && cd >= 1 && cd <= 28;
-  document.getElementById('wbCycleBtn').disabled = !ok;
-  if (cd >= 1 && cd <= 28) {
-    const today = new Date();
-    const d = today.getDate();
-    let cycleStart;
-    if (d >= cd) {
-      cycleStart = new Date(today.getFullYear(), today.getMonth(), cd);
-    } else {
-      cycleStart = new Date(today.getFullYear(), today.getMonth() - 1, cd);
-    }
-    const cycleEnd = new Date(cycleStart);
-    cycleEnd.setMonth(cycleEnd.getMonth() + 1);
-    cycleEnd.setDate(cycleEnd.getDate() - 1);
-    const opts = { day:'numeric', month:'short' };
-    document.getElementById('wbCyclePreview').textContent =
-      'Current cycle: ' + cycleStart.toLocaleDateString('en-AU', opts) + ' – ' + cycleEnd.toLocaleDateString('en-AU', opts);
+  let valid = budget > 0;
+  const opts = { day:'numeric', month:'short' };
+  const previewEl = document.getElementById('wbCyclePreview');
+
+  if (_wbCycleType === 'monthly') {
+    const cd = parseInt(document.getElementById('wbCycleDay').value);
+    valid = valid && cd >= 1 && cd <= 28;
+    if (cd >= 1 && cd <= 28) {
+      const today = new Date();
+      const d = today.getDate();
+      let cycleStart = d >= cd
+        ? new Date(today.getFullYear(), today.getMonth(), cd)
+        : new Date(today.getFullYear(), today.getMonth() - 1, cd);
+      const cycleEnd = new Date(cycleStart.getFullYear(), cycleStart.getMonth() + 1, cd - 1);
+      previewEl.textContent = 'Current cycle: ' + cycleStart.toLocaleDateString('en-AU', opts) + ' – ' + cycleEnd.toLocaleDateString('en-AU', opts);
+    } else { previewEl.textContent = ''; }
   } else {
-    document.getElementById('wbCyclePreview').textContent = '';
+    const anchor = document.getElementById('wbCycleAnchor').value;
+    valid = valid && !!anchor;
+    if (anchor) {
+      const days = _wbCycleType === 'weekly' ? 7 : 14;
+      const anchorDate = new Date(anchor + 'T00:00:00');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const elapsed = Math.floor((today - anchorDate) / (days * 86400000));
+      const cycleStart = new Date(anchorDate);
+      cycleStart.setDate(anchorDate.getDate() + elapsed * days);
+      const cycleEnd = new Date(cycleStart);
+      cycleEnd.setDate(cycleStart.getDate() + days - 1);
+      previewEl.textContent = 'Current cycle: ' + cycleStart.toLocaleDateString('en-AU', opts) + ' – ' + cycleEnd.toLocaleDateString('en-AU', opts);
+    } else { previewEl.textContent = ''; }
   }
+  document.getElementById('wbCycleBtn').disabled = !valid;
 }
 
 function wbSubmitCycle() {
   const budget = parseFloat(document.getElementById('wbBudget').value);
-  const cd = parseInt(document.getElementById('wbCycleDay').value);
-  if (!budget || !cd) return;
-  state.budget = budget; state.cycleDay = cd;
+  if (!budget) return;
+  state.budget = budget;
+  state.cycleType = _wbCycleType;
+  if (_wbCycleType === 'monthly') {
+    const cd = parseInt(document.getElementById('wbCycleDay').value);
+    if (!cd) return;
+    state.cycleDay = cd;
+    state.cycleAnchorDate = '';
+  } else {
+    const anchor = document.getElementById('wbCycleAnchor').value;
+    if (!anchor) return;
+    state.cycleAnchorDate = anchor;
+    state.cycleDay = 1;
+  }
   saveState(); updateHeader();
   wbGoTo(4);
 }
@@ -3811,18 +4498,35 @@ function skipLock() {
 function updateDots(n, error) {
   for (let i = 0; i < 4; i++) {
     const d = document.getElementById('dot' + i);
+    const wasFilled = d.classList.contains('filled');
     d.classList.toggle('filled', i < n);
     d.classList.toggle('error', error);
+    // Re-trigger pop animation on newly filled dot
+    if (!wasFilled && i < n && !error) {
+      d.classList.remove('filled');
+      void d.offsetWidth; // force reflow
+      d.classList.add('filled');
+    }
   }
 }
-function lockTap(digit) {
+let _lockTapTime = 0; // guard against ontouchstart + onclick double-fire
+function lockTap(digit, btn) {
+  const now = Date.now();
+  if (now - _lockTapTime < 300) return; // ignore duplicate within 300ms
+  _lockTapTime = now;
   if (lockBuf.length >= 4) return;
+  if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 120); }
   lockBuf += digit;
   document.getElementById('lockError').textContent = '';
   updateDots(lockBuf.length, false);
   if (lockBuf.length === 4) setTimeout(() => processPin(lockBuf), 80);
 }
-function lockBackspace() {
+let _lockBackTime = 0;
+function lockBackspace(btn) {
+  const now = Date.now();
+  if (now - _lockBackTime < 300) return;
+  _lockBackTime = now;
+  if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 120); }
   if (lockBuf.length > 0) { lockBuf = lockBuf.slice(0,-1); updateDots(lockBuf.length, false); }
 }
 function processPin(pin) {
@@ -3870,20 +4574,121 @@ function unlockApp() {
   updateDots(0, false);
   renderContent();
 }
+const BIOM_CRED_KEY = 'spendly_biom_cred'; // stored credential ID (base64)
+
+function isBiometricSupported() {
+  return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.get);
+}
+
+function hasBiometricRegistered() {
+  return !!localStorage.getItem(BIOM_CRED_KEY);
+}
+
+// Show Face ID prompt vs PIN pad based on state
+function showPinFallback() {
+  const faceIdPrompt = document.getElementById('faceIdPrompt');
+  const pinPad = document.getElementById('pinPad');
+  if (faceIdPrompt) faceIdPrompt.style.display = 'none';
+  if (pinPad) { pinPad.style.display = 'flex'; pinPad.style.flexDirection = 'column'; pinPad.style.alignItems = 'center'; }
+  updateDots(0, false);
+}
+
+function showFaceIdPrompt() {
+  const faceIdPrompt = document.getElementById('faceIdPrompt');
+  const pinPad = document.getElementById('pinPad');
+  if (faceIdPrompt) faceIdPrompt.style.display = 'flex';
+  if (pinPad) pinPad.style.display = 'none';
+}
+
+// Register biometric credential (one-time setup)
+async function registerBiometric() {
+  if (!isBiometricSupported()) return false;
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = crypto.getRandomValues(new Uint8Array(16));
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'Spendly', id: location.hostname },
+        user: { id: userId, name: 'spendly-user', displayName: 'Spendly User' },
+        pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
+          residentKey: 'preferred',
+        },
+        timeout: 60000,
+      }
+    });
+    if (!credential) return false;
+    // Store credential ID as base64
+    const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+    localStorage.setItem(BIOM_CRED_KEY, credId);
+    return true;
+  } catch(e) {
+    console.log('Biometric registration cancelled or failed:', e.message);
+    return false;
+  }
+}
+
+// Verify biometric (called on each unlock)
+async function triggerBiometric() {
+  if (!isBiometricSupported()) { showPinFallback(); return; }
+  const storedCredId = localStorage.getItem(BIOM_CRED_KEY);
+  if (!storedCredId) {
+    // Not registered yet — try to register now
+    const btn = document.getElementById('faceIdBtn');
+    if (btn) { btn.style.opacity = '0.5'; btn.disabled = true; }
+    const registered = await registerBiometric();
+    if (btn) { btn.style.opacity = '1'; btn.disabled = false; }
+    if (registered) {
+      // Auto-unlock after successful registration
+      showToast('✅ Face ID set up! You\'ll use it to unlock Spendly from now on.', 3000);
+      unlockApp();
+    } else {
+      showPinFallback();
+    }
+    return;
+  }
+  // Existing credential — authenticate
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const credIdBytes = Uint8Array.from(atob(storedCredId), c => c.charCodeAt(0));
+    const btn = document.getElementById('faceIdBtn');
+    if (btn) { btn.style.opacity = '0.5'; }
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ id: credIdBytes, type: 'public-key' }],
+        userVerification: 'required',
+        timeout: 60000,
+      }
+    });
+    if (btn) { btn.style.opacity = '1'; }
+    if (assertion) {
+      unlockApp();
+    } else {
+      showPinFallback();
+    }
+  } catch(e) {
+    // User cancelled or Face ID failed — fall back to PIN
+    const btn = document.getElementById('faceIdBtn');
+    if (btn) { btn.style.opacity = '1'; }
+    showPinFallback();
+  }
+}
+
 async function offerBiometric() {
-  // Skip WebAuthn/passkey — it shows an intrusive iOS sheet we can't suppress
-  // PIN-only is cleaner and more reliable on iOS
+  // After PIN setup — offer to set up Face ID
+  if (!isBiometricSupported() || hasBiometricRegistered()) { unlockApp(); return; }
+  // Show offer toast
+  showToast('💡 Set up Face ID for faster unlock — go to Settings to enable it.', 4000);
   unlockApp();
 }
-async function triggerBiometric() {
-  // Not used — biometric via WebAuthn shows unavoidable iOS passkey sheet
-  document.getElementById('lockBiomBtn').style.display = 'none';
-  document.getElementById('lockBiomSmall').style.display = 'none';
-}
+
 async function initLock() {
   const hasPin = !!localStorage.getItem(LOCK_KEY);
   const skipped = !!localStorage.getItem(LOCK_SKIPPED);
-  // First-time user — no PIN set yet, no skip: show setup
   if (!hasPin && !skipped) {
     lockMode = 'setup'; lockBuf = ''; lockFirst = '';
     document.getElementById('lockIcon').textContent = '🔐';
@@ -3891,24 +4696,72 @@ async function initLock() {
     document.getElementById('lockSub').textContent = 'Set a 4-digit PIN to protect your data';
     document.getElementById('lockHint').style.display = 'block';
     document.getElementById('lockSkipBtn').style.display = 'block';
+    showPinFallback();
     updateDots(0, false);
     showLockScreen();
     return;
   }
-  // Returning user with PIN — show unlock screen
   if (hasPin) {
     lockMode = 'unlock'; lockBuf = '';
     document.getElementById('lockIcon').textContent = '🔒';
     document.getElementById('lockTitle').textContent = 'Hey, ' + (state.appName || 'there') + ' 👋';
-    document.getElementById('lockSub').textContent = 'Enter your PIN to continue';
-    document.getElementById('lockHint').style.display = 'none';
     document.getElementById('lockSkipBtn').style.display = 'none';
     document.getElementById('lockBiomBtn').style.display = 'none';
     document.getElementById('lockBiomSmall').style.display = 'none';
     updateDots(0, false);
-    showLockScreen();
+
+    const hasBiom = isBiometricSupported() && hasBiometricRegistered();
+    if (hasBiom) {
+      document.getElementById('lockSub').textContent = 'Scanning...';
+      showFaceIdPrompt();
+      showLockScreen();
+      // Auto-trigger Face ID after screen is visible
+      setTimeout(() => triggerBiometric(), 400);
+    } else {
+      document.getElementById('lockSub').textContent = 'Enter your PIN to continue';
+      showPinFallback();
+      showLockScreen();
+    }
   }
-  // skipped = no lock screen shown, app opens normally
+}
+
+// Enable/disable Face ID from Settings
+async function setupFaceId() {
+  if (!isBiometricSupported()) {
+    showToast('Face ID / biometric authentication is not supported on this device.', 3000);
+    return;
+  }
+  if (hasBiometricRegistered()) {
+    if (confirm('Remove Face ID from Spendly? You\'ll use your PIN to unlock.')) {
+      localStorage.removeItem(BIOM_CRED_KEY);
+      renderSettingsFaceIdBtn();
+      showToast('Face ID removed. PIN will be used to unlock.', 3000);
+    }
+    return;
+  }
+  const registered = await registerBiometric();
+  if (registered) {
+    renderSettingsFaceIdBtn();
+    showToast('✅ Face ID enabled! It will be used to unlock Spendly from now on.', 3000);
+  } else {
+    showToast('Face ID setup was cancelled. Your PIN still works.', 3000);
+  }
+}
+
+function renderSettingsFaceIdBtn() {
+  const has = hasBiometricRegistered();
+  const label = document.getElementById('faceIdSettingsLabel');
+  const chevron = document.getElementById('faceIdSettingsChevron');
+  if (label) {
+    label.textContent = has ? 'Disable Face ID' : 'Enable Face ID';
+    label.style.color = has ? 'var(--red)' : 'var(--text)';
+  }
+  if (chevron) chevron.style.color = has ? 'var(--red)' : 'var(--muted)';
+  // Legacy btn (kept for compat)
+  const el = document.getElementById('faceIdSettingsBtn');
+  if (!el) return;
+  el.textContent = has ? '🔓 Disable Face ID' : '🔐 Enable Face ID';
+  el.style.color = has ? 'var(--red)' : 'var(--accent)';
 }
 
 
@@ -4797,12 +5650,64 @@ function startConfetti() {
 // ── Mortgage tab ──────────────────────────────────────────────────────────────
 let editingMortgageExtraId = null;
 
+// Calculates estimated current balance from a known anchor point
+function getEstimatedBalance() {
+  const mg = state.mortgage || {};
+  const anchorBalance = mg.currentBalance || 0;
+  const anchorDate = mg.balanceAsOf || mg.startDate || '';
+  if (!anchorBalance || !anchorDate) return { balance: anchorBalance, anchorDate, isEstimated: false };
+
+  const anchor = new Date(anchorDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Find the mortgage category to identify repayment expenses
+  const mortgageCat = state.categories.find(c =>
+    c.name.toLowerCase().includes('mortgage') ||
+    c.name.toLowerCase().includes('home loan') ||
+    c.icon === '🏠'
+  );
+
+  // SUM repayments: mortgage recurring expenses logged AFTER anchor date
+  let totalRepayments = 0;
+  if (mortgageCat) {
+    (state.expenses || []).forEach(e => {
+      if (e.categoryId !== mortgageCat.id) return;
+      const d = new Date(e.date + 'T00:00:00');
+      if (d > anchor && d <= today) totalRepayments += e.amount;
+    });
+  }
+
+  // SUM extra repayments logged AFTER anchor date
+  let totalExtras = 0;
+  (state.mortgageExtras || []).forEach(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    if (d > anchor && d <= today) totalExtras += e.amount;
+  });
+
+  // NOTE: Interest is NOT added here — it is already baked into whatever
+  // anchor balance you pulled from your bank app. Adding it again would
+  // double-count it. The interest log is for tracking purposes only.
+
+  const estimated = anchorBalance - totalRepayments - totalExtras;
+  const isEstimated = totalRepayments > 0 || totalExtras > 0;
+
+  return {
+    balance: Math.max(0, estimated),
+    anchorDate,
+    anchorBalance,
+    totalRepayments,
+    totalExtras,
+    isEstimated,
+  };
+}
+
 function mortgageCalc() {
   const mg = state.mortgage || {};
   if (!mg.loanAmount || !mg.interestRate || !mg.termYears) return null;
 
   const principal = mg.loanAmount;
-  const startBalance = mg.currentBalance > 0 ? mg.currentBalance : principal;
+  const est = getEstimatedBalance();
+  const startBalance = est.balance > 0 ? est.balance : (mg.currentBalance > 0 ? mg.currentBalance : principal);
   const annualRate = mg.interestRate / 100;
   const weeklyRate = annualRate / 52;
   const totalWeeks = mg.termYears * 52;
@@ -4889,6 +5794,7 @@ function openMortgageSettings() {
   const mg = state.mortgage || {};
   document.getElementById('mgLoanAmount').value = mg.loanAmount || '';
   document.getElementById('mgCurrentBalance').value = mg.currentBalance || '';
+  document.getElementById('mgBalanceAsOf').value = mg.balanceAsOf || '';
   document.getElementById('mgRate').value = mg.interestRate || '';
   document.getElementById('mgStartDate').value = mg.startDate || '';
   document.getElementById('mgTerm').value = mg.termYears || 30;
@@ -4902,6 +5808,7 @@ function saveMortgageSettings() {
   if (!state.mortgage) state.mortgage = {};
   state.mortgage.loanAmount      = parseFloat(document.getElementById('mgLoanAmount').value) || 0;
   state.mortgage.currentBalance  = parseFloat(document.getElementById('mgCurrentBalance').value) || 0;
+  state.mortgage.balanceAsOf     = document.getElementById('mgBalanceAsOf').value || '';
   state.mortgage.interestRate    = parseFloat(document.getElementById('mgRate').value) || 0;
   state.mortgage.startDate       = document.getElementById('mgStartDate').value || '';
   state.mortgage.termYears       = parseInt(document.getElementById('mgTerm').value) || 30;
@@ -4917,39 +5824,124 @@ function saveMortgageSettings() {
 }
 
 
+let editingRateFromDate = null; // null = new entry, string = editing existing
+
 function checkRateChanged() {
-  const currentRate = (state.mortgage && state.mortgage.interestRate) || 0;
   const newRate = parseFloat(document.getElementById('mgNewRate').value);
   const fromDate = document.getElementById('mgRateFromDate').value;
   const today = todayStr();
   const btn = document.getElementById('mgRateSaveBtn');
   if (!btn) return;
-  const isNew = !isNaN(newRate) && newRate > 0 && newRate !== currentRate;
-  const validDate = fromDate && fromDate >= today;
-  btn.disabled = !(isNew && validDate);
-  btn.style.opacity = (isNew && validDate) ? '1' : '0.4';
+  const hasRate = !isNaN(newRate) && newRate > 0;
+  const hasDate = !!fromDate;
+
+  let enabled = false;
+  if (editingRateFromDate !== null) {
+    // Edit mode — any valid rate + date
+    enabled = hasRate && hasDate;
+  } else if (document.getElementById('mgRateModalInfo') && document.getElementById('mortgageRateModalInfo').style.display !== 'none') {
+    // Current rate change — must be today or future, and different from current rate
+    const currentRate = (state.mortgage && state.mortgage.interestRate) || 0;
+    enabled = hasRate && hasDate && fromDate >= today && newRate !== currentRate;
+  } else {
+    // Historical add — any valid rate + past date
+    enabled = hasRate && hasDate;
+  }
+  btn.disabled = !enabled;
+  btn.style.opacity = enabled ? '1' : '0.4';
 }
+
 function openMortgageRateModal() {
+  editingRateFromDate = null;
+  document.getElementById('mortgageRateModalTitle').textContent = 'Update interest rate';
+  document.getElementById('mortgageRateModalInfo').style.display = 'block';
+  document.getElementById('mgRateDateLabel').textContent = 'Effective from (today or future only)';
   document.getElementById('mgNewRate').value = (state.mortgage && state.mortgage.interestRate) || '';
   const today = todayStr();
   const dateField = document.getElementById('mgRateFromDate');
   dateField.value = today;
-  dateField.min = today; // prevent selecting past dates
+  dateField.min = today;
+  dateField.removeAttribute('max');
+  document.getElementById('mgRateMinRepayment').value = '';
+  document.getElementById('mgRateSaveBtn').textContent = 'Update rate';
   document.getElementById('mgRateSaveBtn').disabled = true;
   document.getElementById('mgRateSaveBtn').style.opacity = '0.4';
+  document.getElementById('mgRateDeleteBtn').style.display = 'none';
   openModal('mortgageRateModal');
   setTimeout(() => document.getElementById('mgNewRate').focus(), 350);
 }
+
+function openAddHistoricalRate() {
+  editingRateFromDate = null;
+  document.getElementById('mortgageRateModalTitle').textContent = 'Add historical rate';
+  document.getElementById('mortgageRateModalInfo').style.display = 'none';
+  document.getElementById('mgRateDateLabel').textContent = 'Effective from (past date)';
+  document.getElementById('mgNewRate').value = '';
+  const dateField = document.getElementById('mgRateFromDate');
+  dateField.value = '';
+  dateField.removeAttribute('min');
+  dateField.max = todayStr();
+  document.getElementById('mgRateMinRepayment').value = '';
+  document.getElementById('mgRateSaveBtn').textContent = 'Save entry';
+  document.getElementById('mgRateSaveBtn').disabled = true;
+  document.getElementById('mgRateSaveBtn').style.opacity = '0.4';
+  document.getElementById('mgRateDeleteBtn').style.display = 'none';
+  openModal('mortgageRateModal');
+  setTimeout(() => { document.getElementById('mgNewRate').focus(); checkRateChanged(); }, 350);
+}
+
+function openEditHistoricalRate(fromDate) {
+  const entry = (state.mortgage.rateHistory || []).find(r => r.fromDate === fromDate);
+  if (!entry) return;
+  editingRateFromDate = fromDate;
+  document.getElementById('mortgageRateModalTitle').textContent = 'Edit rate entry';
+  document.getElementById('mortgageRateModalInfo').style.display = 'none';
+  document.getElementById('mgRateDateLabel').textContent = 'Effective from';
+  document.getElementById('mgNewRate').value = entry.rate || '';
+  const dateField = document.getElementById('mgRateFromDate');
+  dateField.value = fromDate;
+  dateField.removeAttribute('min');
+  dateField.removeAttribute('max');
+  document.getElementById('mgRateMinRepayment').value = entry.minWeeklyRepayment || '';
+  document.getElementById('mgRateSaveBtn').textContent = 'Save changes';
+  document.getElementById('mgRateSaveBtn').disabled = false;
+  document.getElementById('mgRateSaveBtn').style.opacity = '1';
+  // Show delete for all entries except the current rate
+  const isCurrent = (state.mortgage.rateHistory || []).sort((a,b)=>b.fromDate.localeCompare(a.fromDate))[0]?.fromDate === fromDate;
+  document.getElementById('mgRateDeleteBtn').style.display = isCurrent ? 'none' : 'block';
+  openModal('mortgageRateModal');
+  setTimeout(() => { document.getElementById('mgNewRate').focus(); checkRateChanged(); }, 350);
+}
+
 function saveMortgageRate() {
   const newRate = parseFloat(document.getElementById('mgNewRate').value);
   const fromDate = document.getElementById('mgRateFromDate').value;
+  const minRepayment = parseFloat(document.getElementById('mgRateMinRepayment').value) || null;
   if (!newRate || newRate <= 0 || !fromDate) return;
   if (!state.mortgage.rateHistory) state.mortgage.rateHistory = [];
-  // Remove any future entries on same date and add new one
+  // If editing an existing entry, remove old one first
+  if (editingRateFromDate) {
+    state.mortgage.rateHistory = state.mortgage.rateHistory.filter(r => r.fromDate !== editingRateFromDate);
+  }
+  // Remove any entry with same date and add new one
   state.mortgage.rateHistory = state.mortgage.rateHistory.filter(r => r.fromDate !== fromDate);
-  state.mortgage.rateHistory.push({ rate: newRate, fromDate });
+  state.mortgage.rateHistory.push({ rate: newRate, fromDate, minWeeklyRepayment: minRepayment });
   state.mortgage.rateHistory.sort((a,b) => a.fromDate.localeCompare(b.fromDate));
-  state.mortgage.interestRate = newRate; // update current rate too
+  // Update current rate to the most recent entry
+  const latest = state.mortgage.rateHistory[state.mortgage.rateHistory.length - 1];
+  state.mortgage.interestRate = latest.rate;
+  saveState(); closeModal('mortgageRateModal'); renderContent();
+}
+
+function deleteMortgageRateEntry() {
+  if (!editingRateFromDate) return;
+  if (!confirm('Remove this rate entry?')) return;
+  state.mortgage.rateHistory = (state.mortgage.rateHistory || []).filter(r => r.fromDate !== editingRateFromDate);
+  // Update current rate to most recent remaining entry
+  if (state.mortgage.rateHistory.length > 0) {
+    state.mortgage.rateHistory.sort((a,b) => a.fromDate.localeCompare(b.fromDate));
+    state.mortgage.interestRate = state.mortgage.rateHistory[state.mortgage.rateHistory.length - 1].rate;
+  }
   saveState(); closeModal('mortgageRateModal'); renderContent();
 }
 
@@ -5151,7 +6143,8 @@ function deleteMortgageInterest() {
 function mortgageProjectionData(extraOffsetAmt) {
   const mg = state.mortgage || {};
   if (!mg.loanAmount || !mg.interestRate || !mg.termYears) return null;
-  const startBalance = mg.currentBalance > 0 ? mg.currentBalance : mg.loanAmount;
+  const est = getEstimatedBalance();
+  const startBalance = est.balance > 0 ? est.balance : (mg.currentBalance > 0 ? mg.currentBalance : mg.loanAmount);
   const annualRate = mg.interestRate / 100;
   const weeklyRate = annualRate / 52;
   if (weeklyRate <= 0) return null;
@@ -5264,7 +6257,11 @@ function renderMortgage() {
   const fmtF = (n) => '$' + n.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
   const timeLeft = (c.yearsLeft > 0 ? c.yearsLeft + 'y ' : '') + (c.monthsLeft > 0 ? c.monthsLeft + 'm' : '') || '< 1 month';
   const paidOffStr = c.paidOffDate ? c.paidOffDate.toLocaleDateString('en-AU',{month:'short',year:'numeric'}) : '—';
-  const pctPaid = (mg.loanAmount > 0 ? Math.min(((mg.loanAmount - c.remaining) / mg.loanAmount) * 100, 100) : 0).toFixed(1);
+
+  const est = getEstimatedBalance();
+  const displayBalance = est.balance > 0 ? est.balance : (mg.currentBalance || 0);
+  const pctPaid = (mg.loanAmount > 0 ? Math.min(((mg.loanAmount - displayBalance) / mg.loanAmount) * 100, 100) : 0).toFixed(1);
+  const anchorDateStr = est.anchorDate ? new Date(est.anchorDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '';
 
   let html = headerRow;
 
@@ -5272,23 +6269,36 @@ function renderMortgage() {
   html += '<div style="background:var(--surface);border-radius:var(--r);padding:16px;margin-bottom:8px">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">' +
       '<div>' +
-        '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Current balance</div>' +
-        '<div style="font-size:32px;font-weight:800;letter-spacing:-1px">' + fmtF(c.remaining) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">' +
+          (est.isEstimated ? 'Estimated balance' : 'Current balance') +
+        '</div>' +
+        '<div style="font-size:32px;font-weight:800;letter-spacing:-1px">' + fmtF(displayBalance) + '</div>' +
         '<div style="font-size:12px;color:var(--muted);margin-top:2px">of ' + fmtD(mg.loanAmount) + ' original loan</div>' +
       '</div>' +
       '<div style="text-align:right">' +
         '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Paid off</div>' +
-        '<div style="font-size:20px;font-weight:700">' + fmtD(mg.loanAmount - c.remaining) + '</div>' +
+        '<div style="font-size:20px;font-weight:700">' + fmtD(mg.loanAmount - displayBalance) + '</div>' +
         '<div style="font-size:11px;color:var(--muted)">' + pctPaid + '%</div>' +
       '</div>' +
     '</div>' +
     '<div style="background:var(--surface2);border-radius:100px;height:8px;overflow:hidden;margin-bottom:6px">' +
       '<div style="width:' + pctPaid + '%;height:100%;background:var(--accent);border-radius:100px;transition:width 0.4s"></div>' +
     '</div>' +
-    '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">' +
+    '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:' + (est.isEstimated ? '12' : '0') + 'px">' +
       '<span>' + (mg.startDate ? 'Started ' + new Date(mg.startDate+'T00:00:00').toLocaleDateString('en-AU',{month:'short',year:'numeric'}) : '') + '</span>' +
       '<span>Free ' + paidOffStr + '</span>' +
     '</div>' +
+    (est.isEstimated ? (
+      '<div style="border-top:1px solid var(--surface2);padding-top:10px">' +
+        '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">How we calculated this</div>' +
+        '<div style="display:grid;grid-template-columns:1fr auto;gap:3px 12px;font-size:12px">' +
+          '<span style="color:var(--muted)">Balance on ' + anchorDateStr + '</span><span style="font-weight:600;text-align:right">' + fmtF(est.anchorBalance) + '</span>' +
+          (est.totalRepayments > 0 ? '<span style="color:var(--muted)">Repayments since</span><span style="font-weight:600;color:#34C759;text-align:right">-' + fmtF(est.totalRepayments) + '</span>' : '') +
+          (est.totalExtras > 0 ? '<span style="color:var(--muted)">Extra repayments</span><span style="font-weight:600;color:#34C759;text-align:right">-' + fmtF(est.totalExtras) + '</span>' : '') +
+        '</div>' +
+        '<div style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.5">Interest is not added here — it\'s already in your bank balance. Update the anchor balance periodically in <button onclick="openMortgageSettings()" style="background:none;border:none;color:var(--accent);font-size:11px;font-family:var(--font);cursor:pointer;padding:0">Edit details</button> for best accuracy.</div>' +
+      '</div>'
+    ) : (anchorDateStr ? '<div style="font-size:11px;color:var(--muted)">Balance as of ' + anchorDateStr + ' — add repayments to track changes</div>' : '')) +
   '</div>';
 
   // ── Time + repayment cards ─────────────────────────────────────────────────
@@ -5431,23 +6441,37 @@ function renderMortgage() {
   // ── Interest rate card ────────────────────────────────────────────────────
   const rateHistory = (mg.rateHistory || []).slice().sort((a,b) => b.fromDate.localeCompare(a.fromDate));
   html += '<div style="background:var(--surface);border-radius:var(--r);padding:14px;margin-bottom:8px">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (rateHistory.length > 1 ? '12' : '0') + 'px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
       '<div>' +
         '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Interest rate</div>' +
         '<div style="font-size:26px;font-weight:800;letter-spacing:-0.5px">' + (mg.interestRate || '—') + '%</div>' +
         '<div style="font-size:11px;color:var(--muted)">per annum</div>' +
       '</div>' +
-      '<button onclick="openMortgageRateModal()" style="background:var(--accent-dim);color:var(--accent);border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer">Change rate</button>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">' +
+        '<button onclick="openMortgageRateModal()" style="background:var(--accent-dim);color:var(--accent);border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">Change rate</button>' +
+        '<button onclick="openAddHistoricalRate()" style="background:var(--surface2);color:var(--muted);border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">+ Historical</button>' +
+      '</div>' +
     '</div>' +
-    (rateHistory.length > 1 ?
+    (rateHistory.length > 0 ?
       '<div style="border-top:1px solid var(--surface2);padding-top:10px">' +
         '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Rate history</div>' +
-        rateHistory.map((r, i) =>
-          '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">' +
-          '<span style="color:var(--muted)">' + new Date(r.fromDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) + '</span>' +
-          '<span style="font-weight:600' + (i===0?';color:var(--text)':'') + '">' + r.rate + '%' + (i===0?' (current)':'') + '</span>' +
-          '</div>'
-        ).join('') +
+        '<div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:4px 10px;align-items:center">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:600">DATE</div>' +
+          '<div></div>' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:600;text-align:right">RATE</div>' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:600;text-align:right">MIN/WK</div>' +
+          rateHistory.map((r, i) => {
+            const isCurrentRate = i === 0;
+            const minRep = r.minWeeklyRepayment ? '$' + parseFloat(r.minWeeklyRepayment).toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+            return '<div style="font-size:12px;color:var(--muted)">' + new Date(r.fromDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) + '</div>' +
+              '<div>' + (isCurrentRate ? '<span style="font-size:10px;background:var(--accent-dim);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:700">current</span>' : '') + '</div>' +
+              '<div style="font-size:12px;font-weight:700;text-align:right;color:' + (isCurrentRate?'var(--text)':'var(--muted)') + '">' + r.rate + '%</div>' +
+              '<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">' +
+                '<span style="font-size:12px;font-weight:600;color:' + (isCurrentRate?'var(--text)':'var(--muted)') + '">' + minRep + '</span>' +
+                '<button onclick="openEditHistoricalRate(\'' + r.fromDate + '\')" style="background:var(--surface2);border:none;border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;font-family:var(--font)">Edit</button>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
       '</div>'
       : '') +
   '</div>';
@@ -6000,6 +7024,7 @@ function toggleRecActive() {
   el.textContent = recActiveState ? '✓' : '';
   el.style.background = recActiveState ? 'var(--accent)' : 'var(--surface3)';
   el.style.border = '2px solid ' + (recActiveState ? 'var(--accent)' : 'var(--border)');
+  checkRecChanged();
 }
 
 function toggleRecOffset() {
@@ -6009,6 +7034,7 @@ function toggleRecOffset() {
   el.textContent = recOffsetState ? '✓' : '';
   el.style.background = recOffsetState ? 'var(--accent)' : 'var(--surface3)';
   el.style.border = '2px solid ' + (recOffsetState ? 'var(--accent)' : 'var(--border)');
+  checkRecChanged();
 }
 
 function updateRecOffsetVisibility() {
@@ -6048,6 +7074,7 @@ function setRecFreq(freq) {
   document.getElementById('recQuarterlySection').style.display = freq === 'quarterly' ? 'block' : 'none';
   document.getElementById('recYearlySection').style.display = freq === 'yearly' ? 'block' : 'none';
   updateRecPreview();
+  checkRecChanged();
 }
 
 function setRecWeekday(day) {
@@ -6058,6 +7085,7 @@ function setRecWeekday(day) {
     btn.classList.toggle('selected', d === day);
   });
   updateRecPreview();
+  checkRecChanged();
 }
 
 function updateRecPreview() {
@@ -6136,13 +7164,64 @@ function populateRecCatSelect() {
   }
 }
 
+let recOriginalSnapshot = null; // snapshot of record when editing opens
+
+function cancelRecurring() {
+  closeModal('recurringModal');
+  setTimeout(() => openRecurringList(), 50);
+}
+
+function getRecCurrentSnapshot() {
+  return {
+    name: document.getElementById('recName').value.trim(),
+    amount: parseFloat(document.getElementById('recAmount').value) || 0,
+    categoryId: document.getElementById('recCat').value,
+    frequency: recFreqState,
+    active: recActiveState,
+    autoOffset: recOffsetState,
+    weekday: recWeekdayState,
+    monthDay: parseInt(document.getElementById('recMonthDay').value) || null,
+    xweeksNum: parseInt(document.getElementById('recXweeksNum').value) || null,
+    xweeksDate: document.getElementById('recXweeksDate').value || null,
+    quarterlyDate: document.getElementById('recQuarterlyDate').value || null,
+    yearlyDate: document.getElementById('recYearlyDate').value || null,
+  };
+}
+
+function checkRecChanged() {
+  if (!editingRecurringId || !recOriginalSnapshot) return;
+  const curr = getRecCurrentSnapshot();
+  const orig = recOriginalSnapshot;
+  const changed = curr.name !== orig.name ||
+    curr.amount !== orig.amount ||
+    curr.categoryId !== orig.categoryId ||
+    curr.frequency !== orig.frequency ||
+    curr.active !== orig.active ||
+    curr.autoOffset !== orig.autoOffset ||
+    curr.weekday !== orig.weekday ||
+    curr.monthDay !== orig.monthDay ||
+    curr.xweeksNum !== orig.xweeksNum ||
+    curr.xweeksDate !== orig.xweeksDate ||
+    curr.quarterlyDate !== orig.quarterlyDate ||
+    curr.yearlyDate !== orig.yearlyDate;
+  const btn = document.getElementById('recSaveBtn');
+  if (btn) {
+    btn.disabled = !changed;
+    btn.style.opacity = changed ? '1' : '0.4';
+    btn.style.cursor = changed ? 'pointer' : 'default';
+  }
+}
+
 function openAddRecurring() {
   editingRecurringId = null; recActiveState = true; recOffsetState = false;
+  recOriginalSnapshot = null;
   document.getElementById('recurringModalTitle').textContent = 'New recurring expense';
   document.getElementById('recName').value = '';
   document.getElementById('recAmount').value = '';
   document.getElementById('recDeleteBtn').style.display = 'none';
-  document.getElementById('recSaveBtn').textContent = 'Save';
+  const saveBtn = document.getElementById('recSaveBtn');
+  saveBtn.textContent = 'Save';
+  saveBtn.disabled = false; saveBtn.style.opacity = '1'; saveBtn.style.cursor = 'pointer';
   const check = document.getElementById('recActiveCheck');
   check.textContent = '✓'; check.style.background = 'var(--accent)'; check.style.border = '2px solid var(--accent)';
   const ocheck = document.getElementById('recOffsetCheck');
@@ -6200,6 +7279,10 @@ function openEditRecurring(id) {
     document.getElementById('recYearlyDate').value = rec.nextDate || '';
   }
   updateRecPreview();
+  // Capture snapshot AFTER all fields are set, disable Update until change detected
+  recOriginalSnapshot = getRecCurrentSnapshot();
+  const saveBtn = document.getElementById('recSaveBtn');
+  saveBtn.disabled = true; saveBtn.style.opacity = '0.4'; saveBtn.style.cursor = 'default';
   closeModal('recurringListModal');
   openModal('recurringModal');
 }
@@ -6241,7 +7324,7 @@ function saveRecurring() {
   closeModal('recurringModal');
   updateHeader();
   renderContent();
-  openRecurringList();
+  setTimeout(() => openRecurringList(), 50);
 }
 
 function deleteRecurring() {
@@ -6251,7 +7334,7 @@ function deleteRecurring() {
   closeModal('recurringModal');
   updateHeader();
   renderContent();
-  openRecurringList();
+  setTimeout(() => openRecurringList(), 50);
 }
 
 function recFreqLabel(r) {
@@ -6331,17 +7414,31 @@ function openRecurringList() {
   if (recs.length === 0) {
     content.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No recurring expenses yet.<br>Tap + to add one.</div>';
   } else {
-    content.innerHTML = recs.map(r => {
+    // Sort by next due date ascending
+    const sorted = recs.slice().sort((a, b) => {
+      const na = getRecNextDate(a);
+      const nb = getRecNextDate(b);
+      if (!na && !nb) return 0;
+      if (!na) return 1;
+      if (!nb) return -1;
+      return na - nb;
+    });
+    const todayStr_ = todayStr();
+    content.innerHTML = sorted.map(r => {
       const cat = catById(r.categoryId);
       const next = getRecNextDate(r);
       const nextStr = next ? next.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : '—';
+      const nextDate = next ? dateToStr(next) : '';
+      const isDueToday = nextDate === todayStr_;
+      const isOverdue = next && next < new Date(todayStr_ + 'T00:00:00');
       const autoOffsetBadge = r.autoOffset ? '<span style="font-size:9px;background:rgba(79,142,247,0.15);color:var(--accent);border-radius:4px;padding:2px 5px;font-weight:700;margin-left:4px">🏦 AUTO</span>' : '';
       const pausedBadge = r.active===false ? '<span style="font-size:10px;color:var(--orange);font-weight:400"> · Paused</span>' : '';
+      const dueBadge = isDueToday ? '<span style="font-size:9px;background:rgba(52,199,89,0.15);color:#34C759;border-radius:4px;padding:2px 5px;font-weight:700;margin-left:4px">TODAY</span>' : '';
       return '<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--surface2)">' +
         '<div style="width:38px;height:38px;border-radius:10px;background:'+(cat?cat.color:'#888')+'22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+(cat?cat.icon:'❓')+'</div>' +
         '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13px;font-weight:600">' + r.name + autoOffsetBadge + pausedBadge + '</div>' +
-          '<div style="font-size:11px;color:var(--muted)">' + recFreqLabel(r) + ' · Next: ' + nextStr + '</div>' +
+          '<div style="font-size:13px;font-weight:600">' + r.name + autoOffsetBadge + pausedBadge + dueBadge + '</div>' +
+          '<div style="font-size:11px;color:'+(isDueToday?'#34C759':isOverdue?'var(--red)':'var(--muted)')+'">' + recFreqLabel(r) + ' · Next: ' + nextStr + '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">' +
           '<div style="text-align:right">' +
@@ -6356,6 +7453,12 @@ function openRecurringList() {
   openModal('recurringListModal');
 }
 
+function repairMissingRecurringExpenses() {
+  // Now just delegates to applyRecurringExpenses which uses expense-existence
+  // as its only guard — no lastAdded dependency
+  applyRecurringExpenses();
+}
+
 function applyRecurringExpenses() {
   const recs = (state.recurringExpenses||[]).filter(r=>r.active!==false);
   if (!recs.length) return;
@@ -6365,12 +7468,19 @@ function applyRecurringExpenses() {
   const autoOffsetFired = [];
 
   recs.forEach(r => {
-    // Don't add twice on same day
-    if (r.lastAdded === todayDateStr) return;
     const next = getRecNextDate(r);
     if (!next) return;
     next.setHours(0,0,0,0);
     if (next.getTime() !== today.getTime()) return;
+
+    // Skip if expense already exists for today — this is the only guard we need
+    const alreadyExists = (state.expenses||[]).some(e =>
+      e.categoryId === r.categoryId &&
+      e.date === todayDateStr &&
+      e.amount === r.amount &&
+      e.name === r.name
+    );
+    if (alreadyExists) { r.lastAdded = todayDateStr; return; }
 
     // Add the expense dated today
     state.expenses.push({
@@ -6383,23 +7493,24 @@ function applyRecurringExpenses() {
     r.lastAdded = todayDateStr;
     added = true;
 
-    // Auto offset withdrawal if enabled
+    // Auto offset withdrawal if enabled — guard against duplicates too
     if (r.autoOffset) {
       if (!state.offsetTransactions) state.offsetTransactions = [];
-      state.offsetTransactions.push({
-        id: uid(),
-        type: 'withdrawal',
-        amount: r.amount,
-        date: todayDateStr,
-        note: r.name + ' (auto)',
-      });
-      autoOffsetFired.push({ name: r.name, amount: r.amount });
+      const offsetExists = (state.offsetTransactions||[]).some(t =>
+        t.date === todayDateStr && t.amount === r.amount && t.note === r.name + ' (auto)'
+      );
+      if (!offsetExists) {
+        state.offsetTransactions.push({
+          id: uid(), type: 'withdrawal', amount: r.amount,
+          date: todayDateStr, note: r.name + ' (auto)',
+        });
+        autoOffsetFired.push({ name: r.name, amount: r.amount });
+      }
     }
   });
 
   if (added) {
     saveState();
-    // Show toast for auto offset withdrawals
     if (autoOffsetFired.length > 0) {
       setTimeout(() => {
         autoOffsetFired.forEach(item => {
@@ -6410,8 +7521,47 @@ function applyRecurringExpenses() {
   }
 }
 
+function showRecurringDiagnostic() {
+  const todayStr_ = todayStr();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const recs = (state.recurringExpenses || []).filter(r => r.active !== false);
+  let html = '<div style="font-size:11px;font-family:monospace;background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;max-height:60vh;overflow-y:auto">';
+  html += '<div style="font-weight:700;margin-bottom:8px;font-size:12px">Today: ' + todayStr_ + '</div>';
+  recs.forEach(r => {
+    const next = getRecNextDate(r);
+    const nextStr = next ? dateToStr(next) : 'null';
+    const isToday = next && next.getTime() === today.getTime();
+    const expExists = (state.expenses || []).some(e =>
+      e.categoryId === r.categoryId && e.date === todayStr_ &&
+      e.amount === r.amount && e.name === r.name
+    );
+    html += '<div style="border-top:1px solid var(--border);padding:6px 0;color:' + (isToday ? 'var(--accent)' : 'var(--text)') + '">' +
+      '<strong>' + r.name + '</strong><br>' +
+      'freq: ' + r.frequency + (r.monthDay ? ' day=' + r.monthDay : '') + (r.weekday !== undefined ? ' wd=' + r.weekday : '') + '<br>' +
+      'nextDate computed: ' + nextStr + '<br>' +
+      'lastAdded: ' + (r.lastAdded || 'null') + '<br>' +
+      'expenseExists: ' + expExists + '<br>' +
+      (isToday ? '→ DUE TODAY' : '') +
+    '</div>';
+  });
+  html += '</div>';
+  html += '<button class="btn-primary" onclick="repairMissingRecurringExpenses();renderContent();closeModal(\'recurringDiagModal\');showToast(\'✅ Repair ran\',2000)">Run repair now</button>';
+  html += '<button class="btn-ghost" onclick="closeModal(\'recurringDiagModal\')">Close</button>';
+
+  // Create modal dynamically
+  let m = document.getElementById('recurringDiagModal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'recurringDiagModal';
+    m.className = 'modal-overlay';
+    m.innerHTML = '<div class="modal"><div class="modal-handle"></div><div class="modal-title">Recurring diagnostic</div><div id="recurringDiagContent"></div></div>';
+    document.body.appendChild(m);
+  }
+  document.getElementById('recurringDiagContent').innerHTML = html;
+  openModal('recurringDiagModal');
+}
+
 function showToast(message, duration) {
-  duration = duration || 3000;
   // Remove existing toast
   const existing = document.getElementById('spendlyToast');
   if (existing) existing.remove();
@@ -7028,36 +8178,64 @@ function initModalSwipeDown() {
     const modal = overlay.querySelector('.modal');
     if (!modal || modal.dataset.swipeInit) return;
     modal.dataset.swipeInit = '1';
-    let startY = 0, dragging = false, scrolled = false;
-    modal.addEventListener('touchstart', e => {
+
+    // ── Restructure modal for sticky header + scrollable body ──────────────
+    if (!modal.querySelector('.modal-body')) {
+      // Find the handle and title
+      const handle = modal.querySelector('.modal-handle');
+      const title = modal.querySelector('.modal-title');
+
+      // Build sticky header wrapper
+      const handleBar = document.createElement('div');
+      handleBar.className = 'modal-handle-bar';
+      if (handle) handleBar.appendChild(handle);
+
+      // Wrap remaining content in scrollable body
+      const body = document.createElement('div');
+      body.className = 'modal-body';
+      // Move all remaining children into body
+      while (modal.firstChild) body.appendChild(modal.firstChild);
+
+      modal.appendChild(handleBar);
+      if (title) handleBar.appendChild(title);
+      modal.appendChild(body);
+    }
+
+    // ── Swipe to close — handle bar only ───────────────────────────────────
+    const handleBar = modal.querySelector('.modal-handle-bar');
+    if (!handleBar) return;
+
+    let startY = 0, currentY = 0, dragging = false;
+
+    handleBar.addEventListener('touchstart', e => {
       startY = e.touches[0].clientY;
+      currentY = 0;
       dragging = true;
-      scrolled = false;
       modal.style.transition = 'none';
     }, { passive: true });
-    modal.addEventListener('touchmove', e => {
+
+    handleBar.addEventListener('touchmove', e => {
       if (!dragging) return;
       const dy = e.touches[0].clientY - startY;
-      // Only drag if swiping down from top (not scrolling content)
-      const scrollable = modal.querySelector('[style*="overflow-y:auto"], [style*="overflow-y: auto"]');
-      const atTop = !scrollable || scrollable.scrollTop === 0;
-      if (dy > 8 && atTop) {
-        modal.style.transform = 'translateY(' + dy + 'px)';
-      } else if (dy < -8) {
-        scrolled = true;
-      }
-    }, { passive: true });
-    modal.addEventListener('touchend', e => {
+      if (dy < 0) { dragging = false; modal.style.transition = ''; return; }
+      currentY = dy;
+      modal.style.transform = 'translateY(' + dy + 'px)';
+      overlay.style.background = 'rgba(0,0,0,' + Math.max(0, 0.7 - (dy / 400) * 0.7) + ')';
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    handleBar.addEventListener('touchend', () => {
       if (!dragging) return;
       dragging = false;
       modal.style.transition = '';
-      const dy = e.changedTouches[0].clientY - startY;
-      if (dy > 80 && !scrolled) {
-        modal.style.transform = '';
+      overlay.style.background = '';
+      if (currentY > 80) {
         overlay.classList.remove('open');
+        modal.style.transform = '';
       } else {
         modal.style.transform = '';
       }
+      currentY = 0;
     });
   });
 }
@@ -7601,14 +8779,9 @@ function saveSuperSettings() {
   saveState(); closeModal('superModal'); renderContent();
 }
 
-function openPropertySettings() {
-  const mg = state.mortgage || {};
-  const mortgageBalance = mg.currentBalance || 0;
-  document.getElementById('propertyModalTitle').textContent = 'Log property valuation';
-  document.getElementById('propertyValue').value = state.propertyValue || '';
-  document.getElementById('propertyValDate').value = todayStr();
-  document.getElementById('propertyValNote').value = '';
-  // Live equity preview
+let _editingValDate = null; // null = new, date string = editing existing
+
+function _propertyModalSetup(mortgageBalance) {
   const updatePreview = () => {
     const val = parseFloat(document.getElementById('propertyValue').value) || 0;
     const equity = Math.max(val - mortgageBalance, 0);
@@ -7621,8 +8794,36 @@ function openPropertySettings() {
   };
   document.getElementById('propertyValue').oninput = updatePreview;
   updatePreview();
-  document.getElementById('propertyModal').classList.add('open');
+  openModal('propertyModal');
   setTimeout(() => document.getElementById('propertyValue').focus(), 350);
+}
+
+function openPropertySettings() {
+  _editingValDate = null;
+  const mg = state.mortgage || {};
+  const mortgageBalance = getEstimatedBalance().balance || mg.currentBalance || 0;
+  document.getElementById('propertyModalTitle').textContent = 'Log property valuation';
+  document.getElementById('propertyValue').value = state.propertyValue || '';
+  document.getElementById('propertyValDate').value = todayStr();
+  document.getElementById('propertyValNote').value = '';
+  document.getElementById('propertyValSaveBtn').textContent = 'Save valuation';
+  document.getElementById('propertyValDeleteBtn').style.display = 'none';
+  _propertyModalSetup(mortgageBalance);
+}
+
+function openEditValuation(date) {
+  const entry = (state.propertyHistory || []).find(h => h.date === date);
+  if (!entry) return;
+  _editingValDate = date;
+  const mg = state.mortgage || {};
+  const mortgageBalance = getEstimatedBalance().balance || mg.currentBalance || 0;
+  document.getElementById('propertyModalTitle').textContent = 'Edit valuation';
+  document.getElementById('propertyValue').value = entry.value || '';
+  document.getElementById('propertyValDate').value = entry.date || '';
+  document.getElementById('propertyValNote').value = entry.note || '';
+  document.getElementById('propertyValSaveBtn').textContent = 'Save changes';
+  document.getElementById('propertyValDeleteBtn').style.display = 'block';
+  _propertyModalSetup(mortgageBalance);
 }
 
 function savePropertyValue() {
@@ -7630,18 +8831,28 @@ function savePropertyValue() {
   const date = document.getElementById('propertyValDate').value || todayStr();
   const note = document.getElementById('propertyValNote').value.trim();
   if (!value) return;
-  state.propertyValue = value;
   if (!state.propertyHistory) state.propertyHistory = [];
-  // Don't duplicate same date
-  const existing = state.propertyHistory.find(h => h.date === date);
-  if (existing) {
-    existing.value = value; existing.note = note;
+  if (_editingValDate) {
+    const idx = state.propertyHistory.findIndex(h => h.date === _editingValDate);
+    if (idx >= 0) state.propertyHistory[idx] = { value, date, note };
   } else {
-    state.propertyHistory.push({ date, value, note });
-    state.propertyHistory.sort((a,b) => b.date.localeCompare(a.date));
+    const existing = state.propertyHistory.find(h => h.date === date);
+    if (existing) { existing.value = value; existing.note = note; }
+    else state.propertyHistory.push({ date, value, note });
   }
+  state.propertyHistory.sort((a,b) => b.date.localeCompare(a.date));
+  state.propertyValue = state.propertyHistory[0].value;
   saveState(); closeModal('propertyModal'); renderContent();
-  showToast('🏠 Property valuation saved — $' + Math.round(value).toLocaleString('en-AU'), 3000);
+  showToast('🏠 Valuation saved — $' + Math.round(value).toLocaleString('en-AU'), 3000);
+}
+
+function deletePropertyValuation() {
+  if (!_editingValDate) return;
+  if (!confirm('Delete this valuation?')) return;
+  state.propertyHistory = (state.propertyHistory || []).filter(h => h.date !== _editingValDate);
+  state.propertyValue = state.propertyHistory.length > 0 ? state.propertyHistory[0].value : 0;
+  saveState(); closeModal('propertyModal'); renderContent();
+  showToast('Valuation deleted', 2000);
 }
 
 // ── Render Net Worth ──────────────────────────────────────────────────────────
@@ -7653,7 +8864,7 @@ function renderNetWorth() {
   const fmt0s = n => (n<0?'-':'') + fmt0(n);
 
   // Components
-  const mortgageBalance = mg.currentBalance || 0;
+  const mortgageBalance = getEstimatedBalance().balance || mg.currentBalance || 0;
   const propertyValue = state.propertyValue || 0;
   const propertyEquity = Math.max(propertyValue - mortgageBalance, 0);
   const offsetBalance = getOffsetBalance();
@@ -7769,12 +8980,15 @@ function renderNetWorth() {
     propHistory.slice().reverse().forEach((h, i) => {
       const equity = Math.max(h.value - mortgageBalance, 0);
       html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;' + (i>0?'border-top:1px solid var(--surface3)':'') + '">' +
-        '<div>' +
+        '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:600">' + fmt0(h.value) + '</div>' +
           '<div style="font-size:11px;color:var(--muted)">' + new Date(h.date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) + (h.note ? ' · ' + h.note : '') + '</div>' +
         '</div>' +
-        '<div style="text-align:right">' +
-          '<div style="font-size:11px;font-weight:600;color:var(--accent)">Equity ' + fmt0(equity) + '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<div style="text-align:right">' +
+            '<div style="font-size:11px;font-weight:600;color:var(--accent)">Equity ' + fmt0(equity) + '</div>' +
+          '</div>' +
+          '<button onclick="openEditValuation(\'' + h.date + '\')" style="background:var(--surface2);border:none;border-radius:8px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--font);flex-shrink:0">Edit</button>' +
         '</div>' +
       '</div>';
     });
@@ -8126,6 +9340,74 @@ function initVersionDisplay() {
 
 async function forceAppUpdate() { await applyUpdate(); }
 
+// ── Backup & Restore ──────────────────────────────────────────────────────────
+function exportBackup() {
+  try {
+    const { currentTab, viewingCycleOffset, mortgageCycleOffset, editingExpenseId, editingCatId, ...persistState } = state;
+    const backup = {
+      _spendly: true,
+      _version: APP_VERSION,
+      _exported: new Date().toISOString(),
+      _user: state.appName || 'Spendly user',
+      data: persistState,
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'spendly-backup-' + date + '.spendly';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    try { localStorage.setItem(LAST_EXPORT_KEY, Date.now().toString()); } catch(e) {}
+    dismissBackupNudge();
+    showToast('✅ Backup exported — save it somewhere safe!', 4000);
+  } catch(e) {
+    showToast('❌ Export failed. Please try again.', 3000);
+  }
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Reset input so same file can be re-selected
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      // Validate it's a Spendly backup
+      if (!parsed._spendly || !parsed.data) {
+        showToast('❌ Invalid backup file. Please select a valid Spendly backup.', 4000);
+        return;
+      }
+      // Confirm before overwriting
+      const exportedDate = parsed._exported ? new Date(parsed._exported).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) : 'unknown date';
+      const userName = parsed._user || 'unknown';
+      const confirmed = confirm(
+        'Restore backup from ' + exportedDate + '?\n\n' +
+        'This will REPLACE all your current data with the backup.\n\n' +
+        'Your current data will be overwritten. This cannot be undone.'
+      );
+      if (!confirmed) return;
+      // Apply backup data
+      state = { ...state, ...parsed.data };
+      saveState();
+      updateHeader();
+      renderContent();
+      closeModal('settingsModal');
+      showToast('✅ Backup restored from ' + exportedDate, 4000);
+    } catch(err) {
+      showToast('❌ Could not read backup file. It may be corrupted.', 4000);
+    }
+  };
+  reader.onerror = () => showToast('❌ Could not read file.', 3000);
+  reader.readAsText(file);
+}
+
 // ── Offset Daily Savings Log ──────────────────────────────────────────────────
 function recordTodayOffsetSaving() {
   const mg = state.mortgage || {};
@@ -8182,79 +9464,160 @@ function hideLaunchScreen(callback) {
 
 async function init() {
   state.currentTab = 'expenses';
-  // Safety net — if init crashes, hide launch screen after 6s
-  const safetyTimer = setTimeout(() => {
-    const ls = document.getElementById('launchScreen');
-    if (ls && ls.style.display !== 'none') {
-      ls.style.display = 'none';
-      showAuthScreen();
-    }
-  }, 6000);
-  try {
-    // Check for existing Supabase session
-    const { data: { session } } = await getSB().auth.getSession();
-    _sbSession = session;
+  applyModeUI(); // hide/show cloud-only UI elements
 
-    if (!_sbSession) {
-      // No session — show auth screen
-      hideLaunchScreen(() => { showAuthScreen(); });
-      clearTimeout(safetyTimer);
-      return;
-    }
-
-    // Session exists — load data and enter app
-    await loadState();
-    state.currentTab = 'expenses';
-    updateHeader();
-    renderContent();
-    initVersionDisplay();
-    hideLaunchScreen(() => {
-      if (!initWelcome()) {
-        showApp();
-        initLock();
-      }
-    });
-    // Force hide launch screen in case it's already gone (returning session)
-    const ls = document.getElementById('launchScreen');
-    if (ls) { ls.style.opacity = '0'; ls.style.display = 'none'; }
-    if (!initWelcome()) { showApp(); initLock(); }
-    applyRecurringExpenses();
-    recordTodayOffsetSaving();
-    setTimeout(checkCycleComplete, 2000);
-    setTimeout(checkExpiryAlerts, 1500);
-    setTimeout(initModalSwipeDown, 600);
-  } catch(e) {
-    console.error('Init error:', e);
-    hideLaunchScreen(() => { showAuthScreen(); });
-  } finally {
-    clearTimeout(safetyTimer);
-  }
-}
-// Wait for Supabase CDN script AND DOM to be ready before initialising
-// Polls up to 5 seconds for window.supabase to appear (CDN load)
-function waitForSupabaseThenInit() {
-  const start = Date.now();
-  function attempt() {
-    if (window.supabase && window.supabase.createClient) {
-      init();
-    } else if (Date.now() - start > 5000) {
-      // CDN failed to load — show auth screen with error
+  if (SPENDLY_MODE === 'cloud') {
+    // ── Cloud mode: check Supabase session first ───────────────────────────
+    const safetyTimer = setTimeout(() => {
       const ls = document.getElementById('launchScreen');
-      if (ls) { ls.style.opacity = '0'; setTimeout(() => { ls.style.display = 'none'; }, 500); }
-      showAuthScreen();
-      const err = document.getElementById('authError');
-      if (err) err.textContent = 'Could not connect. Please check your internet connection and reload.';
-    } else {
-      setTimeout(attempt, 50);
+      if (ls && ls.style.display !== 'none') {
+        ls.style.display = 'none';
+        showAuthScreen();
+      }
+    }, 6000);
+    try {
+      const { data: { session } } = await getSB().auth.getSession();
+      _sbSession = session;
+      if (!_sbSession) {
+        hideLaunchScreen(() => { showAuthScreen(); });
+        clearTimeout(safetyTimer);
+        return;
+      }
+      await loadState();
+      state.currentTab = 'expenses';
+      updateHeader();
+      renderContent();
+      initVersionDisplay();
+      hideLaunchScreen(() => { if (!initWelcome()) { showApp(); initLock(); } });
+      const ls = document.getElementById('launchScreen');
+      if (ls) { ls.style.opacity = '0'; ls.style.display = 'none'; }
+      if (!initWelcome()) { showApp(); initLock(); }
+      repairMissingRecurringExpenses(); applyRecurringExpenses();
+      recordTodayOffsetSaving();
+      setTimeout(checkCycleComplete, 2000);
+      setTimeout(checkExpiryAlerts, 1500);
+      setTimeout(initModalSwipeDown, 600);
+    } catch(e) {
+      console.error('Init error:', e);
+      hideLaunchScreen(() => { showAuthScreen(); });
+    } finally {
+      clearTimeout(safetyTimer);
+    }
+  } else {
+    // ── Local mode: go straight in, no auth ───────────────────────────────
+    const safetyTimer = setTimeout(() => {
+      const ls = document.getElementById('launchScreen');
+      if (ls && ls.style.display !== 'none') {
+        ls.style.display = 'none';
+        showApp();
+      }
+    }, 4000);
+    try {
+      await loadState();
+      state.currentTab = 'expenses';
+      updateHeader();
+      renderContent();
+      initVersionDisplay();
+      hideLaunchScreen(() => { if (!initWelcome()) { showApp(); initLock(); } });
+      const ls = document.getElementById('launchScreen');
+      if (ls) { ls.style.opacity = '0'; ls.style.display = 'none'; }
+      if (!initWelcome()) { showApp(); initLock(); }
+      repairMissingRecurringExpenses(); applyRecurringExpenses();
+      recordTodayOffsetSaving();
+      setTimeout(checkCycleComplete, 2000);
+      setTimeout(checkExpiryAlerts, 1500);
+      setTimeout(initModalSwipeDown, 600);
+      setTimeout(checkBackupNudge, 3000); // local mode only
+    } catch(e) {
+      console.error('Init error:', e);
+      hideLaunchScreen(() => { showApp(); });
+    } finally {
+      clearTimeout(safetyTimer);
     }
   }
-  attempt();
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', waitForSupabaseThenInit);
+// Apply mode-specific UI — hide cloud-only elements in local mode
+function applyModeUI() {
+  const isCloud = SPENDLY_MODE === 'cloud';
+  const syncEl = document.getElementById('syncIndicator');
+  if (syncEl) syncEl.style.display = isCloud ? '' : 'none';
+  const signOutBtn = document.getElementById('signOutBtn');
+  if (signOutBtn) signOutBtn.style.display = isCloud ? '' : 'none';
+  const authScreen = document.getElementById('authScreen');
+  if (authScreen && !isCloud) authScreen.style.display = 'none';
+}
+
+// ── Backup nudge (local mode only) ────────────────────────────────────────────
+function checkBackupNudge() {
+  if (SPENDLY_MODE !== 'local') return;
+  // Only nudge if they have meaningful data
+  const hasData = state.budget > 0 || (state.expenses && state.expenses.length > 0);
+  if (!hasData) return;
+  const lastNudge = localStorage.getItem(LAST_BACKUP_NUDGE_KEY);
+  const lastExport = localStorage.getItem(LAST_EXPORT_KEY);
+  const now = Date.now();
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+  // Don't nudge if exported within 30 days
+  if (lastExport && (now - parseInt(lastExport)) < thirtyDays) return;
+  // Don't nudge more than once every 7 days
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  if (lastNudge && (now - parseInt(lastNudge)) < sevenDays) return;
+  localStorage.setItem(LAST_BACKUP_NUDGE_KEY, now.toString());
+  // Show nudge banner
+  const banner = document.createElement('div');
+  banner.id = 'backupNudge';
+  banner.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;z-index:800;background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:slideUp 0.3s ease';
+  banner.innerHTML =
+    '<span style="font-size:22px">💾</span>' +
+    '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:2px">Back up your data</div>' +
+      '<div style="font-size:11px;color:var(--muted);line-height:1.4">Your data is stored on this device only. Export a backup to keep it safe.</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;flex-shrink:0">' +
+      '<button onclick="exportBackup();dismissBackupNudge()" style="background:var(--accent);border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);white-space:nowrap">Export now</button>' +
+      '<button onclick="dismissBackupNudge()" style="background:var(--surface2);border:none;border-radius:8px;padding:7px 10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--font)">Later</button>' +
+    '</div>';
+  document.body.appendChild(banner);
+}
+
+function dismissBackupNudge() {
+  const el = document.getElementById('backupNudge');
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; setTimeout(() => el.remove(), 200); }
+}
+
+// Boot sequence
+if (SPENDLY_MODE === 'cloud') {
+  // Wait for Supabase CDN to load before initialising
+  function waitForSupabaseThenInit() {
+    const start = Date.now();
+    function attempt() {
+      if (window.supabase && window.supabase.createClient) {
+        init();
+      } else if (Date.now() - start > 5000) {
+        const ls = document.getElementById('launchScreen');
+        if (ls) { ls.style.opacity = '0'; setTimeout(() => { ls.style.display = 'none'; }, 500); }
+        showAuthScreen();
+        const err = document.getElementById('authError');
+        if (err) err.textContent = 'Could not connect. Please check your internet connection and reload.';
+      } else {
+        setTimeout(attempt, 50);
+      }
+    }
+    attempt();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', waitForSupabaseThenInit);
+  } else {
+    waitForSupabaseThenInit();
+  }
 } else {
-  waitForSupabaseThenInit();
+  // Local mode — no Supabase needed, init immediately
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 }
 
 // ── Data protection ───────────────────────────────────────────────────────────
@@ -8276,6 +9639,8 @@ function autoBackup() {
     sessionStorage.setItem(BACKUP_KEY2, data);
   } catch(e) {}
 }
+let _lastRecurringCheckDate = todayStr();
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     autoBackup();
@@ -8283,7 +9648,20 @@ document.addEventListener('visibilitychange', () => {
     // Don't re-lock if auth screen is showing
     const authVisible = !document.getElementById('authScreen').classList.contains('hidden');
     if (authVisible) return;
-    // Re-lock if user has a PIN set and app was hidden
+
+    // Check if the day has changed since last recurring run — fire missed recurring if so
+    const currentDate = todayStr();
+    if (currentDate !== _lastRecurringCheckDate) {
+      _lastRecurringCheckDate = currentDate;
+      // Reload state from cloud first so we're working with fresh data,
+      // then apply recurring on top of it
+      loadState().then(() => {
+        applyRecurringExpenses();
+        recordTodayOffsetSaving();
+        renderContent();
+      });
+    }
+
     const hasPin = !!localStorage.getItem(LOCK_KEY);
     const lockEl = document.getElementById('lockScreen');
     const isAlreadyLocked = lockEl && lockEl.style.display !== 'none';
@@ -8291,13 +9669,22 @@ document.addEventListener('visibilitychange', () => {
       lockMode = 'unlock'; lockBuf = '';
       document.getElementById('lockIcon').textContent = '🔒';
       document.getElementById('lockTitle').textContent = 'Hey, ' + (state.appName || 'there') + ' 👋';
-      document.getElementById('lockSub').textContent = 'Enter your PIN to continue';
       document.getElementById('lockHint').style.display = 'none';
       document.getElementById('lockSkipBtn').style.display = 'none';
       document.getElementById('lockBiomBtn').style.display = 'none';
       document.getElementById('lockBiomSmall').style.display = 'none';
       updateDots(0, false);
-      showLockScreen();
+      const hasBiom = isBiometricSupported() && hasBiometricRegistered();
+      if (hasBiom) {
+        document.getElementById('lockSub').textContent = 'Scanning...';
+        showFaceIdPrompt();
+        showLockScreen();
+        setTimeout(() => triggerBiometric(), 400);
+      } else {
+        document.getElementById('lockSub').textContent = 'Enter your PIN to continue';
+        showPinFallback();
+        showLockScreen();
+      }
     }
   }
 });
