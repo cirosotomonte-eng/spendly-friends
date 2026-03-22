@@ -563,10 +563,10 @@ async function applyUpdate() {
       </div>
       <!-- Monthly: day of month -->
       <div id="wbMonthlyCycleFields">
-        <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block">Cycle starts on day</label>
+        <label style="font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;display:block">Tracking cycle starts on day</label>
         <input class="wb-name-input" id="wbCycleDay" type="number" inputmode="numeric" placeholder="e.g. 18" min="1" max="28" oninput="wbCheckCycle()" style="text-align:left;font-size:16px;padding:14px 16px">
-        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.5">
-          Enter the day your new cycle starts each month. For example, if it resets on the 18th, enter <strong style="color:var(--text)">18</strong>.
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:-8px;margin-bottom:12px;padding:0 2px">
+          Enter the day your new cycle starts each month. For example, if it resets on the 18th, enter <strong style="color:var(--muted)">18</strong>.
         </div>
       </div>
       <!-- Weekly / Fortnightly: anchor date -->
@@ -823,7 +823,7 @@ async function applyUpdate() {
         <div class="big-num" id="totalRemain">—</div>
       </div>
       <div style="text-align:right">
-        <div class="num-label">Monthly budget</div>
+        <div class="num-label" id="budgetCycleLabel">Monthly budget</div>
         <div style="font-size:24px;font-weight:700;letter-spacing:-0.5px;color:var(--muted)" id="budgetDisplay">—</div>
       </div>
     </div>
@@ -978,10 +978,10 @@ async function applyUpdate() {
       <button id="setCycleTypeWeekly" onclick="settingsSetCycleType('weekly')" class="wb-cycle-type-btn">📆<br><span>Weekly</span></button>
     </div>
     <div id="setMonthlyCycleFields">
-      <label>Cycle starts on day</label>
+      <label>Tracking cycle starts on day</label>
       <input type="number" inputmode="numeric" id="setCycleDay2" placeholder="e.g. 18" min="1" max="28">
-      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">
-        Enter the day your new cycle starts each month. For example, if it resets on the 18th, enter <strong style="color:var(--text)">18</strong>.
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:-8px;margin-bottom:14px;padding:0 2px">
+        Enter the day your new cycle starts each month. For example, if it resets on the 18th, enter <strong style="color:var(--muted)">18</strong>.
       </div>
     </div>
     <div id="setAnchorCycleFields" style="display:none">
@@ -2301,6 +2301,9 @@ function updateHeader() {
     }
   }
   document.getElementById('budgetDisplay').textContent = budget > 0 ? fmt(budget) : '—';
+  const cycleTypeLabelMap = { monthly: 'Monthly budget', fortnightly: 'Fortnightly budget', weekly: 'Weekly budget' };
+  const budgetCycleLabelEl = document.getElementById('budgetCycleLabel');
+  if (budgetCycleLabelEl) budgetCycleLabelEl.textContent = cycleTypeLabelMap[state.cycleType || 'monthly'] || 'Monthly budget';
 
   const remainEl = document.getElementById('totalRemain');
   if (budget > 0) {
@@ -3600,8 +3603,29 @@ function renderGoals() {
   const tLeftColor  = totalLeft < 0 ? 'var(--red)' : 'var(--text)';
   const tSpentColor = totalSpent > totalBudget && totalBudget > 0 ? 'var(--red)' : 'var(--text)';
 
+  const overallBudget = state.budget || 0;
+  const cycleLabel = ({ monthly: 'monthly', fortnightly: 'fortnightly', weekly: 'weekly' })[state.cycleType || 'monthly'];
+  const catSumOverBudget = overallBudget > 0 && totalBudget > overallBudget + 0.01;
+  const catBudgetTipId = 'tip-catbudget-total';
+  const budgetWarnIcon = catSumOverBudget
+    ? ' <span onclick="event.stopPropagation();toggleBudgetWarnTip(\'' + catBudgetTipId + '\')" style="cursor:pointer;font-size:13px;line-height:1;vertical-align:middle">⚠️</span>'
+    : '';
+  const budgetTooltipHtml = catSumOverBudget
+    ? '<div id="' + catBudgetTipId + '" style="display:none;background:var(--surface);border:1px solid var(--orange);border-radius:10px;padding:12px 14px;margin:-6px 0 10px;font-size:12px;color:var(--muted);line-height:1.6">' +
+        'The sum of your category budgets (<strong style="color:var(--text)">' + fmt(totalBudget) + '</strong>) exceeds your ' + cycleLabel + ' budget (<strong style="color:var(--text)">' + fmt(overallBudget) + '</strong>) by <strong style="color:var(--red)">' + fmt(totalBudget - overallBudget) + '</strong>. You may not be able to afford all your categories this ' + cycleLabel + ' cycle.' +
+      '</div>'
+    : '';
+  const budgetInfoTipId = 'tip-catbudget-info';
+  const budgetInfoIcon = '<span style="position:relative;display:inline-flex;align-items:center;vertical-align:middle;margin-left:3px">' +
+    '<i class="spendly-tip-icon" onclick="event.stopPropagation();showTip(\'' + budgetInfoTipId + '\')" style="cursor:pointer">i</i>' +
+    '<div class="spendly-tip-box" id="' + budgetInfoTipId + '" style="right:0;left:auto;transform:none;width:230px">This is the sum of all your category budgets. It should match your ' + cycleLabel + ' budget to make sure every dollar is accounted for.</div>' +
+  '</span>';
+
   let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 14px">' +
-    '<div style="background:var(--surface);border-radius:var(--r);padding:11px 12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Budget</div><div style="font-size:16px;font-weight:700;letter-spacing:-0.3px">' + fmt(totalBudget) + '</div></div>' +
+    '<div style="background:var(--surface);border-radius:var(--r);padding:11px 12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;display:flex;align-items:center;gap:2px">Budget' + budgetInfoIcon + budgetWarnIcon + '</div>' +
+    '<div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;color:' + (catSumOverBudget ? 'var(--orange)' : 'var(--text)') + '">' + fmt(totalBudget) + '</div>' +
+    budgetTooltipHtml +
+    '</div>' +
     '<div style="background:var(--surface);border-radius:var(--r);padding:11px 12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Spent</div><div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;color:' + tSpentColor + '">' + fmt(totalSpent) + '</div></div>' +
     '<div style="background:var(--surface);border-radius:var(--r);padding:11px 12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Left</div><div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;color:' + tLeftColor + '">' + (totalLeft<0?'-':'') + fmt(Math.abs(totalLeft)) + '</div></div>' +
   '</div>';
